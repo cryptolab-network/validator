@@ -212,6 +212,18 @@ module.exports = class OnekvWrapper {
   }
 
   getValidators = async () => {
+    const [activeEra, error] = await this.chaindata.getActiveEraIndex();
+    if (error !== null) {
+      console.log(error);
+      return [];
+    }
+
+    const validatorsCache = await this.cachedata.fetch(activeEra, 'validators');
+    if (validatorsCache !== null) {
+      return validatorsCache;
+    }
+
+
     let data = await this.valid();
     if (data.valid.length === 0) {
       return [];
@@ -221,6 +233,8 @@ module.exports = class OnekvWrapper {
       return parseInt(b.rank) - parseInt(a.rank);
     });
     data.valid = await this.chaindata.getValidatorInfo(valid);
+
+    await this.cachedata.update('validators', data);
 
     return data;
   }
