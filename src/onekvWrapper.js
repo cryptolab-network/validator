@@ -1,7 +1,7 @@
 const axios = require('axios');
 const moment = require('moment');
 const ChainData = require('./chaindata');
-// const CacheData = require('./cachedata');
+const CacheData = require('./cachedata');
 
 const KUSAMA_DECIMAL = 1000000000000;
 
@@ -9,17 +9,28 @@ module.exports = class OnekvWrapper {
   constructor(handler) {
     this.handler = handler
     this.chaindata = new ChainData(handler);
-    // this.cachedata = new CacheData();
+    this.cachedata = new CacheData();
   }
 
   valid = async () => {
+    const [activeEra, error] = await this.chaindata.getActiveEraIndex();
+    if (error !== null) {
+      console.log(error);
+      return [];
+    }
+
+    const validCache = await this.cachedata.fetch(activeEra, 'valid');
+    if (validCache !== null) {
+      return validCache;
+    }
+    
     const res = await axios.get('https://kusama.w3f.community/valid');
     if (res.status !== 200 && res.data.length === 0) {
       return [];
     }
 
     let valid = res.data;
-    const [activeEra, activeStash] = await this.chaindata.getValidators();
+    const [, activeStash] = await this.chaindata.getValidators();
     let electedCount = 0;
     valid = valid.map((candidate) => {
       candidate.discoveredAt = moment(candidate.discoveredAt).format();
@@ -41,6 +52,8 @@ module.exports = class OnekvWrapper {
       electionRate: (electedCount / valid.length),
       valid,
     }
+
+    await this.cachedata.update('valid', valid);
     return valid;
   }
 
