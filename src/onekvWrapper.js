@@ -59,18 +59,18 @@ module.exports = class OnekvWrapper {
 
   nominators = async () => {
     // retrive active era
-    const [era, err] = await this.chaindata.getActiveEraIndex();
-    // // check cache data to retive data
-    // const data = await this.cachedata.fetch(era, 'nominators');
-    // if (data !== null) {
-    //   return data;
-    // }
+    const [activeEra, err] = await this.chaindata.getActiveEraIndex();
+    // check cache data to retive data
+    const data = await this.cachedata.fetch(activeEra, 'nominators');
+    if (data !== null) {
+      return data;
+    }
 
     let res = await axios.get('https://kusama.w3f.community/nominators');
     if (res.status === 200) {
       let nominators = res.data;
 
-      let validCandidates = await this.valid(era);
+      let validCandidates = await this.valid();
 
       nominators = nominators.map((nominator, index, array) => {
         const current = nominator.current.map((stash, index, array) => {
@@ -102,11 +102,11 @@ module.exports = class OnekvWrapper {
       });
 
       nominators = {
-        activeEra: parseInt(era),
+        activeEra: parseInt(activeEra),
         nominators
       }
 
-      // this.cachedata.update('nominators', nominators);
+      await this.cachedata.update('nominators', nominators);
 
       return nominators;
     } else {
@@ -231,13 +231,22 @@ module.exports = class OnekvWrapper {
   }
 
   getValidDetail = async () => {
+    const [activeEra, err] = await this.chaindata.getActiveEraIndex();
+    if (err !== null) {
+      console.log(err);
+      return [];
+    }
+
+    const validDetailCache = await this.cachedata.fetch(activeEra, 'validDetail');
+    if (validDetailCache !== null) {
+      return validDetailCache;
+    }
+
     const startTime = new Date().getTime();
     const res = await axios.get('https://kusama.w3f.community/valid');
     if (res.status !== 200 && res.data.length === 0) {
       return [];
     }
-
-    const [activeEra, err] = await this.chaindata.getActiveEraIndex();
 
     let valid = res.data;
     let {validators, nominations} = await this.chaindata.getValidatorWaitingInfo();
@@ -303,6 +312,8 @@ module.exports = class OnekvWrapper {
       electionRate: (electedCount / valid.length),
       valid: valid,
     }
+
+    await this.cachedata.update('validDetail', valid);
 
     return valid;
   }

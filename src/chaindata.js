@@ -135,7 +135,7 @@ module.exports = class ChainData {
     )
     const dataCollectionEndTime = new Date().getTime()
     const dataCollectionTime = dataCollectionEndTime - startTime
-    // eslint-disable-next-line
+    
     console.log(
       `data collection time: ${(dataCollectionTime / 1000).toFixed(3)}s`
     );
