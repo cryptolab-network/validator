@@ -4,6 +4,7 @@ const ChainData = require('./chaindata');
 const CacheData = require('./cachedata');
 
 const KUSAMA_DECIMAL = 1000000000000;
+const POLKADOT_DECIMAL = 10000000000;
 
 module.exports = class OnekvWrapper {
   constructor(handler) {
@@ -140,6 +141,20 @@ module.exports = class OnekvWrapper {
     
     const to = moment.unix(list[0].block_timestamp);
     const from = moment.unix(list[list.length-1].block_timestamp);
+
+    if (network === 'polkadot') {
+      let totalReward = amounts.reduce((a, c) => {
+        return a + c
+      })/POLKADOT_DECIMAL;
+      list = {
+        stash,
+        totalReward_DOT: totalReward,
+        firstReward: from,
+        latestReward: to,
+      }
+  
+      return list;
+    }
 
     let totalReward = amounts.reduce((a, c) => {
       return a + c

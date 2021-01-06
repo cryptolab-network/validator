@@ -19,6 +19,7 @@ const API = {
   onekvlist: API_PREFIX + '/onekvlist',
   ValidDetail: API_PREFIX + '/validDetail',
   test: API_PREFIX + '/test',
+  polkadot: API_PREFIX + '/polkadot/:stash',
 }
 
 const app = new Koa();
@@ -86,6 +87,13 @@ app.use(bodyparser());
     router.get(API.ValidDetail, async (ctx) => {
       const valid = await onekvWrapper.getValidDetail();
       ctx.body = valid;
+    });
+
+    router.get(API.polkadot, async (ctx) => {
+      const { stash } = ctx.params;
+      console.log(stash);
+      const statistic = await onekvWrapper.statistic('polkadot', stash);
+      ctx.body = statistic;
     });
 
     router.get(API.test, async (ctx) => {
