@@ -3,6 +3,8 @@ const logger = require('koa-logger');
 const bodyparser = require('koa-bodyparser');
 const cors = require('koa2-cors');
 const Router = require('koa-router');
+const CronJob = require('cron').CronJob;
+const axios = require('axios');
 
 const ApiHandler = require('./ApiHandler');
 const OnekvWrapper = require('./onekvWrapper');
@@ -103,6 +105,14 @@ app.use(bodyparser());
     app.use(router.routes());
 
     app.listen(keys.PORT);
+
+    // request api every 1 hour to trigger the data cache
+    const job = new CronJob('*/40 * * * * *', async () => {
+      await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
+      console.log(`http://localhost:${keys.PORT}/api/validDetail`);
+    }, null, true, 'America/Los_Angeles');
+    job.start();
+
 
 
   } catch (e) {
