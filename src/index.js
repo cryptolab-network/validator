@@ -107,7 +107,7 @@ app.use(bodyparser());
     app.listen(keys.PORT);
 
     // request api every 1 hour to trigger the data cache
-    const job = new CronJob('*/40 * * * * *', async () => {
+    const job = new CronJob('* * */1 * * *', async () => {
       await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
       console.log(`http://localhost:${keys.PORT}/api/validDetail`);
     }, null, true, 'America/Los_Angeles');
