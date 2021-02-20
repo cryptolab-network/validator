@@ -8,7 +8,7 @@ module.exports = class Scheduler {
     this.oneKvWrapper = oneKvWrapper;
     this.database = database;
      // request api every 1 hour to trigger the data cache
-     this.job_ = new CronJob('* 10 * * * *', async () => {
+     this.job_ = new CronJob('50 */1 * * *', async () => {
       console.log('retrieving validator detail @ ' + moment());
       await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
       console.log(`http://localhost:${keys.PORT}/api/validDetail`);
