@@ -2,9 +2,11 @@ const axios = require('axios');
 const moment = require('moment');
 const ChainData = require('./chaindata');
 const CacheData = require('./cachedata');
+const keys = require('./config/keys');
 
 const KUSAMA_DECIMAL = 1000000000000;
 const POLKADOT_DECIMAL = 10000000000;
+const NODE_RPC_URL = keys.API_1KV_KUSAMA;
 
 module.exports = class OnekvWrapper {
   constructor(handler) {
@@ -25,7 +27,7 @@ module.exports = class OnekvWrapper {
       return validCache;
     }
     
-    const res = await axios.get('https://kusama.w3f.community/valid');
+    const res = await axios.get(`${NODE_RPC_URL}/valid`);
     if (res.status !== 200 && res.data.length === 0) {
       return [];
     }
@@ -67,7 +69,7 @@ module.exports = class OnekvWrapper {
       return data;
     }
 
-    let res = await axios.get('https://kusama.w3f.community/nominators');
+    let res = await axios.get(`${NODE_RPC_URL}/nominators`);
     if (res.status === 200) {
       let nominators = res.data;
 
@@ -184,12 +186,12 @@ module.exports = class OnekvWrapper {
     let nominators = await this.nominators();
     nominators = nominators.nominators;
     const activeStash = await this.chaindata.getValidators();
-    let res = await axios.get('https://kusama.w3f.community/candidates');
+    let res = await axios.get(`${NODE_RPC_URL}/candidates`);
     if (res.status !== 200) {
       return [];
     }
     const candidates = res.data;
-    res = await axios.get('https://kusama.w3f.community/invalid');
+    res = await axios.get(`${NODE_RPC_URL}/invalid`);
     if (res.status !== 200) {
       return [];
     }
@@ -272,7 +274,7 @@ module.exports = class OnekvWrapper {
     }
 
     const startTime = new Date().getTime();
-    const res = await axios.get('https://kusama.w3f.community/valid');
+    const res = await axios.get(`${NODE_RPC_URL}/valid`);
     if (res.status !== 200 && res.data.length === 0) {
       return [];
     }

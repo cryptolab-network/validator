@@ -22,6 +22,7 @@ const API = {
   ValidDetail: API_PREFIX + '/validDetail',
   test: API_PREFIX + '/test',
   polkadot: API_PREFIX + '/polkadot/:stash',
+  kusama: API_PREFIX + '/kusama/:stash',
 }
 
 const app = new Koa();
@@ -32,7 +33,7 @@ app.use(bodyparser());
 (async() => {
   try {
     
-    const handler = await ApiHandler.create(keys.KUSAMA_WSS);
+    const handler = await ApiHandler.create(keys.POLKADOT_WSS);
     const onekvWrapper = new OnekvWrapper(handler);
     const router = new Router();
     
@@ -95,6 +96,13 @@ app.use(bodyparser());
       const { stash } = ctx.params;
       console.log(stash);
       const statistic = await onekvWrapper.statistic('polkadot', stash);
+      ctx.body = statistic;
+    });
+
+    router.get(API.kusama, async (ctx) => {
+      const { stash } = ctx.params;
+      console.log(stash);
+      const statistic = await onekvWrapper.statistic('kusama', stash);
       ctx.body = statistic;
     });
 
