@@ -3,12 +3,13 @@ const logger = require('koa-logger');
 const bodyparser = require('koa-bodyparser');
 const cors = require('koa2-cors');
 const Router = require('koa-router');
-const CronJob = require('cron').CronJob;
-const axios = require('axios');
 
 const ApiHandler = require('./ApiHandler');
 const OnekvWrapper = require('./onekvWrapper');
 const keys = require('./config/keys');
+
+const DatabaseHandler = require('./db/database');
+const Scheduler = require('./scheduler');
 
 const API_PREFIX = '/api';
 
@@ -23,7 +24,11 @@ const API = {
   test: API_PREFIX + '/test',
   polkadot: API_PREFIX + '/polkadot/:stash',
   kusama: API_PREFIX + '/kusama/:stash',
+  validatorTrend: API_PREFIX + '/validator/:stash/trend',
 }
+
+const db = new DatabaseHandler();
+db.connect('127.0.0.1', '27017', 'test');
 
 const app = new Koa();
 app.use(logger());
@@ -35,6 +40,7 @@ app.use(bodyparser());
     
     const handler = await ApiHandler.create(keys.POLKADOT_WSS);
     const onekvWrapper = new OnekvWrapper(handler);
+    const polling = new Scheduler(onekvWrapper, db);
     const router = new Router();
     
     router.get('/', async (ctx) => {
@@ -66,6 +72,12 @@ app.use(bodyparser());
     router.get(API.Validators, async (ctx) => {
       const validators = await onekvWrapper.getValidators();
       ctx.body = validators;
+    });
+
+    router.get(API.validatorTrend, async (ctx) => {
+      const { stash } = ctx.params;
+      const { validator, objectData } = await db.getValidatorStatus(stash);
+      ctx.body = objectData;
     });
 
     router.get(API.onekvlist, async (ctx) => {
@@ -111,18 +123,8 @@ app.use(bodyparser());
     });
 
     app.use(router.routes());
-
+    polling.start();
     app.listen(keys.PORT);
-
-    // request api every 1 hour to trigger the data cache
-    const job = new CronJob('* 10 * * * *', async () => {
-      await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
-      console.log(`http://localhost:${keys.PORT}/api/validDetail`);
-    }, null, true, 'America/Los_Angeles');
-    job.start();
-
-
-
   } catch (e) {
     console.log(e);
   }
