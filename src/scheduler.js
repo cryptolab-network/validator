@@ -32,11 +32,14 @@ module.exports = class Scheduler {
     }
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
-      await this.database.saveValidatorNominationData(v.stash, {
+      const result = await this.database.saveValidatorNominationData(v.stash, {
         era: info.activeEra,
         exposure: v.stakingInfo?.exposure.others,
         nominators: v.stakingInfo?.nominators,
       });
+      if (result) {
+        console.log(`${v.stash} is stored.`)
+      }
     }
   }
 }

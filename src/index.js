@@ -28,7 +28,7 @@ const API = {
 }
 
 const db = new DatabaseHandler();
-db.connect('127.0.0.1', '27017', 'test');
+db.connect(keys.MONGO_ACCOUNT, keys.MONGO_PASSWORD, keys.MONGO_URL, keys.MONGO_PORT, keys.MONGO_DBNAME);
 
 const app = new Koa();
 app.use(logger());
@@ -37,8 +37,8 @@ app.use(bodyparser());
 
 (async() => {
   try {
-    
-    const handler = await ApiHandler.create(keys.POLKADOT_WSS);
+    console.log(keys.KUSAMA_WSS);
+    const handler = await ApiHandler.create(keys.KUSAMA_WSS);
     const onekvWrapper = new OnekvWrapper(handler);
     const polling = new Scheduler(onekvWrapper, db);
     const router = new Router();

@@ -6,10 +6,10 @@ module.exports = class DatabaseHandler {
     this.__initSchema();
   }
 
-  connect(ip, port, dbName) {
+  connect(name, pass, ip, port, dbName) {
     const self = this;
     this.validators = mongoose.model('Validators', this.validatorSchema_);
-    mongoose.connect(`mongodb://${ip}:${port}/${dbName}`, {useNewUrlParser: true, useUnifiedTopology: true});
+    mongoose.connect(`mongodb+srv://${name}:${pass}@${ip}/${dbName}`, {useNewUrlParser: true, useUnifiedTopology: true});
     const db = mongoose.connection;
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', async function() {
