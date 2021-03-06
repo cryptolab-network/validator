@@ -36,6 +36,7 @@ module.exports = class Scheduler {
         era: info.activeEra,
         exposure: v.stakingInfo?.exposure.others,
         nominators: v.stakingInfo?.nominators,
+        commission: v.stakingInfo?.validatorPrefs?.commission / 10000000,
       });
     }
   }
