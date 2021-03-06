@@ -154,6 +154,12 @@ module.exports = class ChainData {
     return nominators;
   }
 
+  getNominatorBalance = async (nominatorId) => {
+    const api = await this.handler.getApi();
+    const ledger = await api.query.balances.locks(nominatorId);
+    return ledger;
+  }
+
   getValidatorWaitingInfo = async () => {
     const api = await this.handler.getApi();
 
