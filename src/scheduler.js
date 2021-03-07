@@ -2,17 +2,48 @@ const keys = require('./config/keys');
 const CronJob = require('cron').CronJob;
 const axios = require('axios');
 const moment = require('moment');
+const CacheData = require('./cachedata');
 
 module.exports = class Scheduler {
-  constructor(oneKvWrapper, database) {
+  constructor(oneKvWrapper, chainData, database, cacheData) {
     this.oneKvWrapper = oneKvWrapper;
     this.database = database;
+    this.chainData = chainData;
+    this.cacheData = cacheData
+    this.isCaching = false;
      // request api every 1 hour to trigger the data cache
      this.job_ = new CronJob('50 */1 * * *', async () => {
+      if(this.isCaching) {
+        return;
+      }
+      this.isCaching = true;
       console.log('retrieving validator detail @ ' + moment());
       await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
       console.log(`http://localhost:${keys.PORT}/api/validDetail`);
       await this.__collectValidatorStatus();
+      
+      const startTime = new Date().getTime();
+      const info = await this.chainData.getValidatorWaitingInfo();
+      const nominators = info.nominations;
+      for(let i = 0; i < nominators.length; i++) {
+        const nominator = nominators[i].nominator;
+        const balance = await this.chainData.getNominatorBalance(nominator);
+        this.cacheData.updateBalance(nominator, balance);
+        console.log(`${i + 1}/${nominators.length}: Balance of ${nominator} is updated: ${balance[0].amount}`);
+        if(i % 100 === 0) {
+          let tmpTime = new Date().getTime();
+          console.log(
+            `data collection time in progress: ${((tmpTime - startTime) / 1000).toFixed(3)}s`
+          )
+        }
+      }
+      const endTime = new Date().getTime();
+      const dataCollectionTime = endTime - startTime
+      // eslint-disable-next-line
+      console.log(
+        `data collection time for nominator balances: ${(dataCollectionTime / 1000).toFixed(3)}s`
+      )
+      this.isCaching = false;
     }, null, true, 'America/Los_Angeles', null, true);
     
   }
