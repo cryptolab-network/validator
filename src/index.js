@@ -7,6 +7,7 @@ const Router = require('koa-router');
 const ApiHandler = require('./ApiHandler');
 const OnekvWrapper = require('./onekvWrapper');
 const ChainData = require('./chaindata');
+const CacheData = require('./cachedata');
 const keys = require('./config/keys');
 
 const DatabaseHandler = require('./db/database');
@@ -44,9 +45,10 @@ app.use(bodyparser());
   try {
     console.log(keys.KUSAMA_WSS);
     const handler = await ApiHandler.create(keys.KUSAMA_WSS);
+    const cacheData = new CacheData();
     const onekvWrapper = new OnekvWrapper(handler);
-    const polling = new Scheduler(onekvWrapper, db);
     const chainData = new ChainData(handler);
+    const polling = new Scheduler(onekvWrapper, chainData, db, cacheData);
     const router = new Router();
     
     router.get('/', async (ctx) => {
@@ -117,7 +119,10 @@ app.use(bodyparser());
       }
       const balances = [];
       for (let i = 0; i < stashlist.length; i++) {
-        let balance = await chainData.getNominatorBalance(stashlist[i]);
+        let balance = await cacheData.fetchBalance(stashlist[i]);
+        if(balance === null) {
+          balance = await chainData.getNominatorBalance(stashlist[i]);
+        }
         if(balance.length > 0) {
           balances.push(balance[0]);
         } else {

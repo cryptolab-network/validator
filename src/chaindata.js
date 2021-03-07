@@ -213,6 +213,12 @@ module.exports = class ChainData {
     )
     const nominations = nominators.map(([key, nominations]) => {
       const nominator = key.toHuman()[0];
+      if(nominations === null) {
+        return  {
+          nominators,
+          targets: [],
+        }
+      }
       const targets = nominations.toHuman().targets;
       return {
         nominator,
