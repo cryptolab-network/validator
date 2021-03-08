@@ -130,7 +130,8 @@ app.use(bodyparser());
     })
 
     router.get(API.ValidDetail, async (ctx) => {
-      const valid = await onekvWrapper.getValidDetail();
+      const { option } = ctx.request.query;
+      const valid = await onekvWrapper.getValidDetail(option);
       ctx.body = valid;
     });
 

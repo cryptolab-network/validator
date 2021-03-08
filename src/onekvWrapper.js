@@ -261,25 +261,28 @@ module.exports = class OnekvWrapper {
     return data;
   }
 
-  getValidDetail = async () => {
+  getValidDetail = async (option = '1kv') => {
+    console.log(`option = ${option}`);
     const [activeEra, err] = await this.chaindata.getActiveEraIndex();
     if (err !== null) {
       console.log(err);
       return [];
     }
 
-    const validDetailCache = await this.cachedata.fetch(activeEra, 'validDetail');
-    if (validDetailCache !== null) {
-      return validDetailCache;
+    if (option === 'all') {
+      const validDetailAllCache = await this.cachedata.fetch(activeEra, 'validDetailAll');
+      if (validDetailAllCache !== null) {
+        return validDetailAllCache;
+      }
+    } else {
+      const validDetailCache = await this.cachedata.fetch(activeEra, 'validDetail');
+      if (validDetailCache !== null) {
+        return validDetailCache;
+      }
     }
 
     const startTime = new Date().getTime();
-    const res = await axios.get(`${NODE_RPC_URL}/valid`);
-    if (res.status !== 200 && res.data.length === 0) {
-      return [];
-    }
-
-    let valid = res.data;
+    
     let {validators, nominations} = await this.chaindata.getValidatorWaitingInfo();
     const dataCollectionEndTime = new Date().getTime();
     const dataCollectionTime = dataCollectionEndTime - startTime
@@ -289,66 +292,92 @@ module.exports = class OnekvWrapper {
     )
     
     const dataProcessStartTime = new Date().getTime();
-    let electedCount = 0;
-    valid = await Promise.all(valid.map(async (candidate) => {
-      const stakingInfo = validators.find((validator) => {
-        return validator.accountId.toString() === candidate.stash;
-      });
-      if (stakingInfo === undefined) {
-        candidate.missing = true;
-        candidate.elected = false;
-        candidate.activeNominators = 0;
-        candidate.totalNominators = 0;
-        candidate.stakingInfo = null;
-      } else {
-        candidate.elected = stakingInfo.active;
-        candidate.activeNominators = candidate.elected ? stakingInfo.exposure.others.length : 0;
+    let valid;
+    if (option === 'all') {
+      valid = validators.map((validator) => {
         const nominators = nominations.filter((nomination) => {
           return nomination.targets.some((target) => {
-            return target === candidate.stash;
+            return target === validator.accountId.toString();
           })
         })
-        candidate.totalNominators = nominators.length;
-        stakingInfo.nominators = nominators.map((element) => {
+        validator.totalNominators = nominators.length;
+        validator.nominators = nominators.map((element) => {
           return {
             address: element.accountId,
             balance: element.balance,
           }
         })
-        candidate.stakingInfo = stakingInfo;
-        if (candidate.elected) {
-          electedCount++;
-        }
-
-        const stakerPoints = await this.chaindata.getStakerPoints(candidate.stash);
-        let count = 0;
-        stakerPoints.forEach((era) => {
-          if (parseInt(era.points) !== 0) {
-            count++;
-          }
-        });
-        candidate.electedRate = count / stakerPoints.length;
-        candidate.stakerPoints = stakerPoints;
-
+        return validator;
+      });
+      await this.cachedata.update('validDetailAll', valid);
+    } else {
+      const res = await axios.get(`${NODE_RPC_URL}/valid`);
+      if (res.status !== 200 && res.data.length === 0) {
+        return [];
       }
-      return candidate;
-    }))
+
+      valid = res.data;
+      let electedCount = 0;
+      valid = await Promise.all(valid.map(async (candidate) => {
+        const stakingInfo = validators.find((validator) => {
+          return validator.accountId.toString() === candidate.stash;
+        });
+        if (stakingInfo === undefined) {
+          candidate.missing = true;
+          candidate.elected = false;
+          candidate.activeNominators = 0;
+          candidate.totalNominators = 0;
+          candidate.stakingInfo = null;
+        } else {
+          candidate.elected = stakingInfo.active;
+          candidate.activeNominators = candidate.elected ? stakingInfo.exposure.others.length : 0;
+          const nominators = nominations.filter((nomination) => {
+            return nomination.targets.some((target) => {
+              return target === candidate.stash;
+            })
+          })
+          candidate.totalNominators = nominators.length;
+          stakingInfo.nominators = nominators.map((element) => {
+            return {
+              address: element.accountId,
+              balance: element.balance,
+            }
+          })
+          candidate.stakingInfo = stakingInfo;
+          if (candidate.elected) {
+            electedCount++;
+          }
+
+          const stakerPoints = await this.chaindata.getStakerPoints(candidate.stash);
+          let count = 0;
+          stakerPoints.forEach((era) => {
+            if (parseInt(era.points) !== 0) {
+              count++;
+            }
+          });
+          candidate.electedRate = count / stakerPoints.length;
+          candidate.stakerPoints = stakerPoints;
+
+        }
+        return candidate;
+      }))
+      
+      valid = {
+        activeEra,
+        validatorCount: valid.length,
+        electedCount,
+        electionRate: (electedCount / valid.length),
+        valid: valid,
+      }
+
+      await this.cachedata.update('validDetail', valid);
+    }
     const dataProcessEndTime = new Date().getTime();
     const dataProcessTime = dataProcessEndTime - dataProcessStartTime;
     // eslint-disable-next-line
     console.log(
       `data process time: ${(dataProcessTime / 1000).toFixed(3)}s`
     )
-    valid = {
-      activeEra,
-      validatorCount: valid.length,
-      electedCount,
-      electionRate: (electedCount / valid.length),
-      valid: valid,
-    }
-
-    await this.cachedata.update('validDetail', valid);
-
     return valid;
   }
 }
