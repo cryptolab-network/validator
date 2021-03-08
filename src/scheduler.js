@@ -18,8 +18,8 @@ module.exports = class Scheduler {
       }
       this.isCaching = true;
       console.log('retrieving validator detail @ ' + moment());
-      await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
-      console.log(`http://localhost:${keys.PORT}/api/validDetail`);
+      await axios.get(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
+      console.log(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
       await this.__collectValidatorStatus();
       // await this.__collectNominatorBalances();
       this.isCaching = false;
@@ -32,35 +32,9 @@ module.exports = class Scheduler {
     this.job_.start();
   }
 
-  // async __collectNominatorBalances() {
-  //   const startTime = new Date().getTime();
-  //   const info = await this.chainData.getValidatorWaitingInfo();
-  //   const nominators = info.nominations;
-  //   for(let i = 0; i < nominators.length; i++) {
-  //     const nominator = nominators[i].nominator;
-  //     const balance = await this.chainData.getNominatorBalance(nominator);
-  //     if(balance !== undefined && balance.length > 0) {
-  //       this.cacheData.updateBalance(nominator, balance);
-  //       console.log(`${i + 1}/${nominators.length}: Balance of ${nominator} is updated: ${balance[0].amount}`);
-  //     }
-  //     if(i % 100 === 0) {
-  //       let tmpTime = new Date().getTime();
-  //       console.log(
-  //         `data collection time in progress: ${((tmpTime - startTime) / 1000).toFixed(3)}s`
-  //       )
-  //     }
-  //   }
-  //   const endTime = new Date().getTime();
-  //   const dataCollectionTime = endTime - startTime
-  //   // eslint-disable-next-line
-  //   console.log(
-  //     `data collection time for nominator balances: ${(dataCollectionTime / 1000).toFixed(3)}s`
-  //   )
-  // }
-
   async __collectValidatorStatus() {
     console.log('Collecting validator status');
-    const info = await this.oneKvWrapper.getValidDetail();
+    const info = await this.oneKvWrapper.getValidDetail('all');
     const validators = info.valid;
     if(!Array.isArray(validators)) {
       console.error('validator detail does not contain info of validators');
@@ -68,14 +42,14 @@ module.exports = class Scheduler {
     }
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
-      const result = await this.database.saveValidatorNominationData(v.stash, {
+      const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
         era: info.activeEra,
-        exposure: v.stakingInfo?.exposure.others,
-        nominators: v.stakingInfo?.nominators,
-        commission: v.stakingInfo?.validatorPrefs?.commission / 10000000,
+        exposure: v.exposure.others,
+        nominators: v.nominators,
+        commission: v.validatorPrefs?.commission / 10000000,
       });
       if (result) {
-        console.log(`${v.stash} is stored.`)
+        console.log(`${v.stashId.toString()} is stored.`)
       }
     }
   }

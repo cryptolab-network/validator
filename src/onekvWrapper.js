@@ -292,6 +292,7 @@ module.exports = class OnekvWrapper {
     )
     
     const dataProcessStartTime = new Date().getTime();
+    let electedCount = 0;
     let valid;
     if (option === 'all') {
       valid = validators.map((validator) => {
@@ -307,8 +308,18 @@ module.exports = class OnekvWrapper {
             balance: element.balance,
           }
         })
+        if (validator.active){
+          electedCount++;
+        } 
         return validator;
       });
+      valid = {
+        activeEra,
+        validatorCount: valid.length,
+        electedCount,
+        electionRate: (electedCount / valid.length),
+        valid: valid,
+      }
       await this.cachedata.update('validDetailAll', valid);
     } else {
       const res = await axios.get(`${NODE_RPC_URL}/valid`);
