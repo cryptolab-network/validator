@@ -6,6 +6,8 @@ const Router = require('koa-router');
 
 const ApiHandler = require('./ApiHandler');
 const OnekvWrapper = require('./onekvWrapper');
+const ChainData = require('./chaindata');
+const CacheData = require('./cachedata');
 const keys = require('./config/keys');
 
 const DatabaseHandler = require('./db/database');
@@ -25,6 +27,10 @@ const API = {
   polkadot: API_PREFIX + '/polkadot/:stash',
   kusama: API_PREFIX + '/kusama/:stash',
   validatorTrend: API_PREFIX + '/validator/:stash/trend',
+
+  AllValidators: API_PREFIX + '/all/validators',
+  EraValidatorNominatorStatus: API_PREFIX + '/all/validatorAndNominators',
+  NominatorBalances: API_PREFIX + '/nominators/:stashlist/stakingInfo'
 }
 
 const db = new DatabaseHandler();
@@ -39,8 +45,10 @@ app.use(bodyparser());
   try {
     console.log(keys.KUSAMA_WSS);
     const handler = await ApiHandler.create(keys.KUSAMA_WSS);
+    const cacheData = new CacheData();
     const onekvWrapper = new OnekvWrapper(handler);
-    const polling = new Scheduler(onekvWrapper, db);
+    const chainData = new ChainData(handler);
+    const polling = new Scheduler(onekvWrapper, chainData, db, cacheData);
     const router = new Router();
     
     router.get('/', async (ctx) => {
@@ -69,6 +77,29 @@ app.use(bodyparser());
       ctx.body = falseNominator;
     });
 
+    router.get(API.AllValidators, async (ctx) => {
+      const validators = await chainData.getValidators();
+      ctx.body = validators;
+    });
+
+    router.get(API.EraValidatorNominatorStatus, async (ctx) => {
+      const validators = await chainData.getValidatorWaitingInfo();
+      // fill nominators array
+      validators.validators.forEach((v)=>{
+        v.stashId = v.stashId.toString();
+        const nominators = validators.nominations.filter((nomination) => {
+          return nomination.targets.some((target) => {
+            return target === v.stashId;
+          })
+        })
+        v.totalNominators = nominators.length;
+        v.nominators = nominators.map((element) => {
+          return element.nominator;
+        })
+      });
+      ctx.body = validators;
+    });
+
     router.get(API.Validators, async (ctx) => {
       const validators = await onekvWrapper.getValidators();
       ctx.body = validators;
@@ -78,6 +109,27 @@ app.use(bodyparser());
       const { stash } = ctx.params;
       const { validator, objectData } = await db.getValidatorStatus(stash);
       ctx.body = objectData;
+    });
+
+    router.get(API.NominatorBalances, async (ctx) => {
+      let { stashlist } = ctx.params;
+      stashlist = JSON.parse(stashlist);
+      if(!Array.isArray(stashlist)) {
+        stashlist = [stashlist];
+      }
+      const balances = [];
+      for (let i = 0; i < stashlist.length; i++) {
+        let balance = await cacheData.fetchBalance(stashlist[i]);
+        if(balance === null) {
+          balance = await chainData.getNominatorBalance(stashlist[i]);
+        }
+        if(balance.length > 0) {
+          balances.push(balance[0]);
+        } else {
+          balances.push(null);
+        }
+      }
+      ctx.body = balances;
     });
 
     router.get(API.onekvlist, async (ctx) => {

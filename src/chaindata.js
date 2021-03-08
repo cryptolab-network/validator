@@ -154,6 +154,12 @@ module.exports = class ChainData {
     return nominators;
   }
 
+  getNominatorBalance = async (nominatorId) => {
+    const api = await this.handler.getApi();
+    const balance = await api.query.balances.locks(nominatorId);
+    return balance;
+  }
+
   getValidatorWaitingInfo = async () => {
     const api = await this.handler.getApi();
 
@@ -234,6 +240,13 @@ module.exports = class ChainData {
       )
     )
     const nominations = nominators.map((nominator) => {
+      if(nominations === null) {
+        return  {
+          nominations,
+          targets: [],
+          balance: null,
+        }
+      }
       const accountId = nominator[0].toHuman()[0];
       const targets = nominator[1].toHuman().targets;
       const balance = nominator.balance;
@@ -243,7 +256,6 @@ module.exports = class ChainData {
         balance
       }
     })
-    // console.log(nominations);
     return {
       validators: validators.concat(intentions),
       nominations
