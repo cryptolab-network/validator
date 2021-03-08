@@ -49,7 +49,7 @@ module.exports = class Scheduler {
         commission: v.validatorPrefs?.commission / 10000000,
       });
       if (result) {
-        console.log(`${v.stashId.toString()} is stored.`)
+        console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
       }
     }
   }
