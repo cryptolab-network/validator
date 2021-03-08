@@ -160,10 +160,10 @@ module.exports = class ChainData {
     const [activeEra, err] = await this.getActiveEraIndex();
     const [blockHash, err2] = await this.findEraBlockHash(activeEra);
 
-    let validators = []
-    let intentions = []
+    let validators = [];
+    let intentions = [];
 
-    const [
+    let [
       validatorAddresses,
       waitingInfo,
       nominators,
@@ -205,14 +205,45 @@ module.exports = class ChainData {
         })
       )
     )
-    const nominations = nominators.map(([key, nominations]) => {
-      const nominator = key.toHuman()[0];
-      const targets = nominations.toHuman().targets;
+    nominators = await Promise.all(
+      nominators.map((nominator) => 
+        api.derive.balances.all(nominator[0].toHuman()[0]).then((balance) => {
+          return {
+            ...nominator,
+            balance: {
+              accountNonce: new BigNumber(balance.accountNonce).toNumber(), 
+              additional: balance.additional,
+              freeBalance: new BigNumber(balance.freeBalance).toNumber(),
+              frozenFee: new BigNumber(balance.frozenFee).toNumber(),
+              frozenMisc: new BigNumber(balance.frozenMisc).toNumber(),
+              reservedBalance: new BigNumber(balance.reservedBalance).toNumber(),
+              votingBalance: new BigNumber(balance.votingBalance).toNumber(),
+              availableBalance: new BigNumber(balance.availableBalance).toNumber(),
+              lockedBalance: new BigNumber(balance.lockedBalance).toNumber(),
+              lockedBreakdown: balance.lockedBreakdown,
+              vestingLocked: new BigNumber(balance.vestingLocked).toNumber(),
+              isVesting: balance.isVesting,
+              vestedBalance: new BigNumber(balance.vestedBalance).toNumber(),
+              vestedClaimable: new BigNumber(balance.vestedClaimable).toNumber(),
+              vestingEndBlock: new BigNumber(balance.vestingEndBlock).toNumber(),
+              vestingPerBlock: new BigNumber(balance.vestingPerBlock).toNumber(),
+              vestingTotal: new BigNumber(balance.vestingTotal).toNumber(),
+            }
+          }
+        })
+      )
+    )
+    const nominations = nominators.map((nominator) => {
+      const accountId = nominator[0].toHuman()[0];
+      const targets = nominator[1].toHuman().targets;
+      const balance = nominator.balance;
       return {
-        nominator,
-        targets
+        accountId,
+        targets,
+        balance
       }
     })
+    // console.log(nominations);
     return {
       validators: validators.concat(intentions),
       nominations

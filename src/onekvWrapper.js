@@ -310,7 +310,10 @@ module.exports = class OnekvWrapper {
         })
         candidate.totalNominators = nominators.length;
         stakingInfo.nominators = nominators.map((element) => {
-          return element.nominator;
+          return {
+            address: element.accountId,
+            balance: element.balance,
+          }
         })
         candidate.stakingInfo = stakingInfo;
         if (candidate.elected) {
