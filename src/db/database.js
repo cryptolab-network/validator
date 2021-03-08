@@ -28,7 +28,7 @@ module.exports = class DatabaseHandler {
             value: Number,
           }
         ],
-        nominators: [String],
+        nominators: [Object],
         commission: Number,
       }],
     }, {toObject: {

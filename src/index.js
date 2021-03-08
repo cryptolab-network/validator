@@ -30,7 +30,6 @@ const API = {
 
   AllValidators: API_PREFIX + '/all/validators',
   EraValidatorNominatorStatus: API_PREFIX + '/all/validatorAndNominators',
-  NominatorBalances: API_PREFIX + '/nominators/:stashlist/stakingInfo'
 }
 
 const db = new DatabaseHandler();
@@ -109,27 +108,6 @@ app.use(bodyparser());
       const { stash } = ctx.params;
       const { validator, objectData } = await db.getValidatorStatus(stash);
       ctx.body = objectData;
-    });
-
-    router.get(API.NominatorBalances, async (ctx) => {
-      let { stashlist } = ctx.params;
-      stashlist = JSON.parse(stashlist);
-      if(!Array.isArray(stashlist)) {
-        stashlist = [stashlist];
-      }
-      const balances = [];
-      for (let i = 0; i < stashlist.length; i++) {
-        let balance = await cacheData.fetchBalance(stashlist[i]);
-        if(balance === null) {
-          balance = await chainData.getNominatorBalance(stashlist[i]);
-        }
-        if(balance.length > 0) {
-          balances.push(balance[0]);
-        } else {
-          balances.push(null);
-        }
-      }
-      ctx.body = balances;
     });
 
     router.get(API.onekvlist, async (ctx) => {

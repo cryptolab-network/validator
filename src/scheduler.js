@@ -21,7 +21,7 @@ module.exports = class Scheduler {
       await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
       console.log(`http://localhost:${keys.PORT}/api/validDetail`);
       await this.__collectValidatorStatus();
-      await this.__collectNominatorBalances();
+      // await this.__collectNominatorBalances();
       this.isCaching = false;
     }, null, true, 'America/Los_Angeles', null, true);
     
@@ -32,31 +32,31 @@ module.exports = class Scheduler {
     this.job_.start();
   }
 
-  async __collectNominatorBalances() {
-    const startTime = new Date().getTime();
-    const info = await this.chainData.getValidatorWaitingInfo();
-    const nominators = info.nominations;
-    for(let i = 0; i < nominators.length; i++) {
-      const nominator = nominators[i].nominator;
-      const balance = await this.chainData.getNominatorBalance(nominator);
-      if(balance !== undefined && balance.length > 0) {
-        this.cacheData.updateBalance(nominator, balance);
-        console.log(`${i + 1}/${nominators.length}: Balance of ${nominator} is updated: ${balance[0].amount}`);
-      }
-      if(i % 100 === 0) {
-        let tmpTime = new Date().getTime();
-        console.log(
-          `data collection time in progress: ${((tmpTime - startTime) / 1000).toFixed(3)}s`
-        )
-      }
-    }
-    const endTime = new Date().getTime();
-    const dataCollectionTime = endTime - startTime
-    // eslint-disable-next-line
-    console.log(
-      `data collection time for nominator balances: ${(dataCollectionTime / 1000).toFixed(3)}s`
-    )
-  }
+  // async __collectNominatorBalances() {
+  //   const startTime = new Date().getTime();
+  //   const info = await this.chainData.getValidatorWaitingInfo();
+  //   const nominators = info.nominations;
+  //   for(let i = 0; i < nominators.length; i++) {
+  //     const nominator = nominators[i].nominator;
+  //     const balance = await this.chainData.getNominatorBalance(nominator);
+  //     if(balance !== undefined && balance.length > 0) {
+  //       this.cacheData.updateBalance(nominator, balance);
+  //       console.log(`${i + 1}/${nominators.length}: Balance of ${nominator} is updated: ${balance[0].amount}`);
+  //     }
+  //     if(i % 100 === 0) {
+  //       let tmpTime = new Date().getTime();
+  //       console.log(
+  //         `data collection time in progress: ${((tmpTime - startTime) / 1000).toFixed(3)}s`
+  //       )
+  //     }
+  //   }
+  //   const endTime = new Date().getTime();
+  //   const dataCollectionTime = endTime - startTime
+  //   // eslint-disable-next-line
+  //   console.log(
+  //     `data collection time for nominator balances: ${(dataCollectionTime / 1000).toFixed(3)}s`
+  //   )
+  // }
 
   async __collectValidatorStatus() {
     console.log('Collecting validator status');

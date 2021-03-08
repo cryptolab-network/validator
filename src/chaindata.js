@@ -178,6 +178,7 @@ module.exports = class ChainData {
       api.derive.staking.waitingInfo(),
       api.query.staking.nominators.entries(),
     ])
+
     validators = await Promise.all(
       validatorAddresses.map((authorityId) =>
         api.derive.staking.query(authorityId, {
@@ -216,33 +217,15 @@ module.exports = class ChainData {
         api.derive.balances.all(nominator[0].toHuman()[0]).then((balance) => {
           return {
             ...nominator,
-            balance: {
-              accountNonce: new BigNumber(balance.accountNonce).toNumber(), 
-              additional: balance.additional,
-              freeBalance: new BigNumber(balance.freeBalance).toNumber(),
-              frozenFee: new BigNumber(balance.frozenFee).toNumber(),
-              frozenMisc: new BigNumber(balance.frozenMisc).toNumber(),
-              reservedBalance: new BigNumber(balance.reservedBalance).toNumber(),
-              votingBalance: new BigNumber(balance.votingBalance).toNumber(),
-              availableBalance: new BigNumber(balance.availableBalance).toNumber(),
-              lockedBalance: new BigNumber(balance.lockedBalance).toNumber(),
-              lockedBreakdown: balance.lockedBreakdown,
-              vestingLocked: new BigNumber(balance.vestingLocked).toNumber(),
-              isVesting: balance.isVesting,
-              vestedBalance: new BigNumber(balance.vestedBalance).toNumber(),
-              vestedClaimable: new BigNumber(balance.vestedClaimable).toNumber(),
-              vestingEndBlock: new BigNumber(balance.vestingEndBlock).toNumber(),
-              vestingPerBlock: new BigNumber(balance.vestingPerBlock).toNumber(),
-              vestingTotal: new BigNumber(balance.vestingTotal).toNumber(),
-            }
+            balance
           }
         })
       )
     )
     const nominations = nominators.map((nominator) => {
-      if(nominations === null) {
+      if(nominator[1] === null) {
         return  {
-          nominations,
+          nominator: nominator[1],
           targets: [],
           balance: null,
         }
