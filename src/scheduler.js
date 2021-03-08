@@ -20,6 +20,8 @@ module.exports = class Scheduler {
       console.log('retrieving validator detail @ ' + moment());
       await axios.get(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
       console.log(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
+      await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
+      console.log(`http://localhost:${keys.PORT}/api/validDetail`);
       await this.__collectValidatorStatus();
       // await this.__collectNominatorBalances();
       this.isCaching = false;
