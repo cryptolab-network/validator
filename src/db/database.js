@@ -9,7 +9,11 @@ module.exports = class DatabaseHandler {
   connect(name, pass, ip, port, dbName) {
     const self = this;
     this.validators = mongoose.model('Validators', this.validatorSchema_);
-    mongoose.connect(`mongodb+srv://${name}:${pass}@${ip}/${dbName}`, {useNewUrlParser: true, useUnifiedTopology: true});
+    mongoose.connect(`mongodb+srv://${name}:${pass}@${ip}/${dbName}`, {
+      useNewUrlParser: true, 
+      useUnifiedTopology: true,
+      poolSize: 10
+    });
     const db = mongoose.connection;
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', async function() {
@@ -40,22 +44,25 @@ module.exports = class DatabaseHandler {
   }
 
   async getValidatorStatus(id) {
+    const startTime = Date.now();
     const validator = await this.validators.find({ id: id }).exec();
-    const result = [];
-    validator.forEach((v)=>{
-      const obj = v.toObject();
-      obj.info.forEach(element => {
-        delete element._id;
-        element.exposure.forEach((e)=>{
-          delete e._id;
-        });
-      });
-      result.push(obj);
-    });
+    const result = this.__validatorSerialize(validator);
+    console.log('Executed query in', Date.now() - startTime, 'ms');
     return {
       validator: validator,
       objectData: result
     };
+  }
+
+  async getValidators(size, page) {
+    const startTime = Date.now();
+    const validatorCollection = await this.validators.find().skip(page * size).limit(size);
+    console.log(`validator collection size: ${validatorCollection.length}`);
+    const result = this.__validatorSerialize(validatorCollection);
+    console.log('Executed query in', Date.now() - startTime, 'ms');
+    return {
+      validator: result
+    }
   }
 
   async saveValidatorNominationData(id, data) {
@@ -113,5 +120,20 @@ module.exports = class DatabaseHandler {
       }
     }
     return true;
+  }
+
+  __validatorSerialize(validator) {
+    const result = [];
+    validator.forEach((v)=>{
+      const obj = v.toObject();
+      obj.info.forEach(element => {
+        delete element._id;
+        element.exposure.forEach((e)=>{
+          delete e._id;
+        });
+      });
+      result.push(obj);
+    });
+    return result;
   }
 }

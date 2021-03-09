@@ -28,8 +28,7 @@ const API = {
   kusama: API_PREFIX + '/kusama/:stash',
   validatorTrend: API_PREFIX + '/validator/:stash/trend',
 
-  AllValidators: API_PREFIX + '/all/validators',
-  EraValidatorNominatorStatus: API_PREFIX + '/all/validatorAndNominators',
+  AllValidators: API_PREFIX + '/allValidators',
 }
 
 const db = new DatabaseHandler();
@@ -77,26 +76,17 @@ app.use(bodyparser());
     });
 
     router.get(API.AllValidators, async (ctx) => {
-      const validators = await chainData.getValidators();
-      ctx.body = validators;
-    });
-
-    router.get(API.EraValidatorNominatorStatus, async (ctx) => {
-      const validators = await chainData.getValidatorWaitingInfo();
-      // fill nominators array
-      validators.validators.forEach((v)=>{
-        v.stashId = v.stashId.toString();
-        const nominators = validators.nominations.filter((nomination) => {
-          return nomination.targets.some((target) => {
-            return target === v.stashId;
-          })
-        })
-        v.totalNominators = nominators.length;
-        v.nominators = nominators.map((element) => {
-          return element.nominator;
-        })
-      });
-      ctx.body = validators;
+      const size = parseInt(ctx.request.query.size);
+      const page = parseInt(ctx.request.query.page);
+      if ((size < 1 || size > 100) && (page < 0)) {
+        ctx.status = 400;
+        ctx.body = {
+          error: "Invalid parameter. size must be >= 1 and <=100. page must be >=0"
+        }
+        return;
+      }
+      const { validator } = await db.getValidators(size, page);
+      ctx.body = validator;
     });
 
     router.get(API.Validators, async (ctx) => {
