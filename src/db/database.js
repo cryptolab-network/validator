@@ -54,14 +54,23 @@ module.exports = class DatabaseHandler {
     };
   }
 
-  async getValidators(size, page) {
+  async getValidators(era, size, page) {
     const startTime = Date.now();
-    const validatorCollection = await this.validators.find().skip(page * size).limit(size);
-    console.log(`validator collection size: ${validatorCollection.length}`);
-    const result = this.__validatorSerialize(validatorCollection);
+    const validatorCollection = await this.validators.aggregate([
+      {$unwind: {path: '$info', preserveNullAndEmptyArrays: true}},
+      {$redact: 
+        {$cond: {
+          if: {$eq:['$info.era', era]},
+          then: '$$KEEP',
+          else: '$$PRUNE',
+        }}
+      },
+      {$skip: page * size},
+      {$limit: size}
+    ]);
     console.log('Executed query in', Date.now() - startTime, 'ms');
     return {
-      validator: result
+      validator: validatorCollection
     }
   }
 

@@ -78,6 +78,7 @@ app.use(bodyparser());
     router.get(API.AllValidators, async (ctx) => {
       const size = parseInt(ctx.request.query.size);
       const page = parseInt(ctx.request.query.page);
+      const [era, err] = await chainData.getActiveEraIndex();
       if ((size < 1 || size > 100) && (page < 0)) {
         ctx.status = 400;
         ctx.body = {
@@ -85,7 +86,7 @@ app.use(bodyparser());
         }
         return;
       }
-      const { validator } = await db.getValidators(size, page);
+      const { validator } = await db.getValidators(era, size, page);
       ctx.body = validator;
     });
 
