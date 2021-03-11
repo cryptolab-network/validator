@@ -79,10 +79,10 @@ app.use(bodyparser());
       const size = parseInt(ctx.request.query.size);
       const page = parseInt(ctx.request.query.page);
       const [era, err] = await chainData.getActiveEraIndex();
-      if ((size < 1 || size > 2000) && (page < 0)) {
+      if ((size < 1 || size > keys.PAGE_SIZE) && (page < 0)) {
         ctx.status = 400;
         ctx.body = {
-          error: "Invalid parameter. size must be >= 1 and <=100. page must be >=0"
+          error: `Invalid parameter. size must be >= 1 and <=${keys.PAGE_SIZE}. page must be >=0`
         }
         return;
       }

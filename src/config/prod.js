@@ -9,4 +9,5 @@ module.exports = {
   MONGO_URL: process.env.MONGO_URL,
   MONGO_PORT: process.env.MONGO_PORT,
   MONGO_DBNAME: process.env.MONGO_DBNAME,
+  PAGE_SIZE: process.env.PAGE_SIZE
 }
