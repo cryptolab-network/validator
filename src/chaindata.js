@@ -160,6 +160,19 @@ module.exports = class ChainData {
     return balance;
   }
 
+  getEraTotalReward = async (era) => {
+    const api = await this.handler.getApi();
+    const totalReward = await api.query.staking.erasValidatorReward(era);
+    console.log(totalReward);
+    return totalReward;
+  }
+
+  getCurrentValidatorCount = async () => {
+    const api = await this.handler.getApi();
+    const validatorCount = await api.query.staking.validatorCount();
+    return validatorCount;
+  }
+
   getValidatorWaitingInfo = async () => {
     const api = await this.handler.getApi();
 

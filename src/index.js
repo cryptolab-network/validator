@@ -79,7 +79,7 @@ app.use(bodyparser());
       const size = parseInt(ctx.request.query.size);
       const page = parseInt(ctx.request.query.page);
       const [era, err] = await chainData.getActiveEraIndex();
-      if ((size < 1 || size > 100) && (page < 0)) {
+      if ((size < 1 || size > 2000) && (page < 0)) {
         ctx.status = 400;
         ctx.body = {
           error: "Invalid parameter. size must be >= 1 and <=100. page must be >=0"
@@ -87,6 +87,20 @@ app.use(bodyparser());
         return;
       }
       const { validator } = await db.getValidators(era, size, page);
+      const eraReward = await chainData.getEraTotalReward(era - 1);
+      const validatorCount = await chainData.getCurrentValidatorCount();
+      for (let i = 0; i < validator.length; i++) {
+        const v = validator[i];
+        const activeKSM = v.info.exposure.reduce((acc, v_)=>{
+          acc += (parseInt(v_.value) / 1000000000000);
+          return acc;
+        }, 0);
+        const commission = v.info.commission;
+        // console.log('-------');
+        // console.log(era, eraReward, validatorCount, commission, activeKSM);
+        const apy = (((eraReward / 1000000000000) / validatorCount) * (1 - commission / 100) * 365) / activeKSM * 4;
+        v.apy = apy;
+      }
       ctx.body = validator;
     });
 
