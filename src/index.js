@@ -87,6 +87,20 @@ app.use(bodyparser());
         return;
       }
       const { validator } = await db.getValidators(era, size, page);
+      const eraReward = await chainData.getEraTotalReward(era - 1);
+      const validatorCount = await chainData.getCurrentValidatorCount();
+      for (let i = 0; i < validator.length; i++) {
+        const v = validator[i];
+        const activeKSM = v.info.exposure.reduce((acc, v_)=>{
+          acc += (parseInt(v_.value) / 1000000000000);
+          return acc;
+        }, 0);
+        const commission = v.info.commission;
+        // console.log('-------');
+        // console.log(era, eraReward, validatorCount, commission, activeKSM);
+        const apy = (((eraReward / 1000000000000) / validatorCount) * (1 - commission / 100) * 365) / activeKSM * 4;
+        v.apy = apy;
+      }
       ctx.body = validator;
     });
 

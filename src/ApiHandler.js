@@ -14,7 +14,7 @@ module.exports = class ApiHandler {
 
   static async create(endpoints) {
     const api = await ApiPromise.create({
-      provider: new WsProvider(endpoints),
+      provider: new WsProvider(endpoints, 1000),
     });
     this._api = api;
     return new ApiHandler(api, endpoints);
