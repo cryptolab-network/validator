@@ -61,6 +61,7 @@ module.exports = class Scheduler {
         exposure: v.exposure,
         nominators: v.nominators,
         commission: v.validatorPrefs?.commission / 10000000,
+        apy: v.apy,
       });
       if (result) {
         console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
