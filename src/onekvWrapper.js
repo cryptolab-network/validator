@@ -23,8 +23,10 @@ module.exports = class OnekvWrapper {
     }
 
     const validCache = await this.cachedata.fetch(activeEra, 'valid');
-    if (validCache !== null) {
-      return validCache;
+    if (validCache !== undefined) {
+      if (validCache !== null && validCache !== '') {
+        return validCache;
+      }
     }
     
     const res = await axios.get(`${NODE_RPC_URL}/valid`);
@@ -47,7 +49,6 @@ module.exports = class OnekvWrapper {
       }
       return candidate;
     })
-
     valid = {
       activeEra,
       validatorCount: valid.length,
