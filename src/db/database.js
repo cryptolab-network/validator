@@ -107,7 +107,7 @@ module.exports = class DatabaseHandler {
       console.error(data);
       return false;
     }
-    if(!Array.isArray(data.exposure)) {
+    if(!Array.isArray(data.exposure.others)) {
       console.error('data.exposure is not an array');
       console.error(id);
       console.error(data);
