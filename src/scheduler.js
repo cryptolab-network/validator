@@ -53,6 +53,10 @@ module.exports = class Scheduler {
       // console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
       const apy = (((eraReward / KUSAMA_DECIMAL) / validatorCount) * (1 - commission/100) * 365) / activeKSM * 4;
       v.apy = apy;
+      if (isNaN(apy)) {
+        console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
+        v.apy = 0;
+      }
       
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
         era: info.activeEra,
