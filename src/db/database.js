@@ -123,9 +123,9 @@ module.exports = class DatabaseHandler {
       console.error(data);
       return false;
     }
-    for(let i = 0; i < data.exposure.length; i++) {
-      if(data.exposure[i] !== undefined) {
-        if(data.exposure[i].who === undefined || data.exposure[i].value === undefined) {
+    for(let i = 0; i < data.exposure.others.length; i++) {
+      if(data.exposure.others[i] !== undefined) {
+        if(data.exposure.others[i].who === undefined || data.exposure.others[i].value === undefined) {
           console.error('incorrect exposure format');
           console.error(id);
           console.error(data);
@@ -142,7 +142,7 @@ module.exports = class DatabaseHandler {
       const obj = v.toObject();
       obj.info.forEach(element => {
         delete element._id;
-        element.exposure.forEach((e)=>{
+        element.exposure.others.forEach((e)=>{
           delete e._id;
         });
       });
