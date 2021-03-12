@@ -26,12 +26,16 @@ module.exports = class DatabaseHandler {
       id:  String,
       info: [{
         era: Number,
-        exposure: [
-          {
-            who: String,
-            value: Number,
-          }
-        ],
+        exposure:{
+          total: String,
+          own: String,
+          others: [
+            {
+              who: String,
+              value: Number,
+            }
+          ]
+        },
         nominators: [Object],
         commission: Number,
       }],
