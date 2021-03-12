@@ -294,6 +294,7 @@ module.exports = class OnekvWrapper {
     const dataProcessStartTime = new Date().getTime();
     let electedCount = 0;
     let valid;
+    let i = 0;
     if (option === 'all') {
       valid = validators.map((validator) => {
         const nominators = nominations.filter((nomination) => {
@@ -310,7 +311,8 @@ module.exports = class OnekvWrapper {
         })
         if (validator.active){
           electedCount++;
-        } 
+        }
+        console.log(`${i++}/${validators.length}`);
         return validator;
       });
       valid = {
