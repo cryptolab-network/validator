@@ -49,8 +49,8 @@ module.exports = class Scheduler {
     const validatorCount = await this.chainData.getCurrentValidatorCount();
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
-      const activeKSM = new BigNumber(v.info.exposure.total).toNumber()/KUSAMA_DECIMAL;
-      const commission = v.info.commission;
+      const activeKSM = new BigNumber(v.exposure.total).toNumber()/KUSAMA_DECIMAL;
+      const commission = v.validatorPrefs.commission;
       // console.log('-------');
       // console.log(era, eraReward, validatorCount, commission, activeKSM);
       const apy = (((eraReward / KUSAMA_DECIMAL) / validatorCount) * (1 - commission / 100) * 365) / activeKSM * 4;
