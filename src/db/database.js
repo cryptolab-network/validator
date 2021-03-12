@@ -38,6 +38,7 @@ module.exports = class DatabaseHandler {
         },
         nominators: [Object],
         commission: Number,
+        apy: Number
       }],
     }, {toObject: {
       transform: function(doc, ret) {
