@@ -31,7 +31,11 @@ module.exports = class OnekvWrapper {
     
     const res = await axios.get(`${NODE_RPC_URL}/valid`);
     if (res.status !== 200 && res.data.length === 0) {
-      return [];
+      console.log(`no data`)
+      return {
+        errorCode: 1000,
+        errorMsg: 'Failed to fetch 1kv validators.' 
+      };
     }
 
     let valid = res.data;
@@ -115,7 +119,11 @@ module.exports = class OnekvWrapper {
       return nominators;
     } else {
       // this.cachedata.update('nominators', []);
-      return [];
+      console.log(`no data`)
+      return {
+        errorCode: 2000,
+        errorMsg: 'Failed to fetch 1kv nominators.' 
+      };
     }
   }
 
@@ -188,13 +196,21 @@ module.exports = class OnekvWrapper {
     nominators = nominators.nominators;
     const activeStash = await this.chaindata.getValidators();
     let res = await axios.get(`${NODE_RPC_URL}/candidates`);
-    if (res.status !== 200) {
-      return [];
+    if (res.status !== 200 || res.data.length === 0) {
+      console.log(`no data`)
+      return {
+        errorCode: 3000,
+        errorMsg: 'Failed to fetch 1kv candidates.' 
+      };
     }
     const candidates = res.data;
     res = await axios.get(`${NODE_RPC_URL}/invalid`);
-    if (res.status !== 200) {
-      return [];
+    if (res.status !== 200 || res.data.length === 0) {
+      console.log(`no data`)
+      return {
+        errorCode: 4000,
+        errorMsg: 'Failed to fetch 1kv invalid.' 
+      };
     }
     let invalid = res.data;
     invalid = invalid.split(/\n/);
@@ -285,8 +301,8 @@ module.exports = class OnekvWrapper {
     const startTime = new Date().getTime();
 
     // fetch 1kv validators first.
+    const res = await axios.get(`${NODE_RPC_URL}/valid`);
     if (option !== 'all') {
-      const res = await axios.get(`${NODE_RPC_URL}/valid`);
       if (res.status !== 200 || res.data.length === 0) {
         console.log(`no data`)
         return {
