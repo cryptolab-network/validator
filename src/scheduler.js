@@ -46,7 +46,7 @@ module.exports = class Scheduler {
       const v = validators[i];
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
         era: info.activeEra,
-        exposure: v.exposure.others,
+        exposure: v.exposure,
         nominators: v.nominators,
         commission: v.validatorPrefs?.commission / 10000000,
       });

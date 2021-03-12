@@ -69,6 +69,7 @@ module.exports = class DatabaseHandler {
       {$limit: size}
     ]);
     console.log('Executed query in', Date.now() - startTime, 'ms');
+    console.log(`validator size = ${validatorCollection.length}`);
     return {
       validator: validatorCollection
     }

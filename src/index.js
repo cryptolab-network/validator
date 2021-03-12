@@ -86,6 +86,7 @@ app.use(bodyparser());
         }
         return;
       }
+      console.log(`era=${era}`);
       const { validator } = await db.getValidators(era, size, page);
       const eraReward = await chainData.getEraTotalReward(era - 1);
       const validatorCount = await chainData.getCurrentValidatorCount();
