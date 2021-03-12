@@ -28,7 +28,7 @@ module.exports = class DatabaseHandler {
         era: Number,
         exposure:{
           total: String,
-          own: String,
+          own: Number,
           others: [
             {
               who: String,
