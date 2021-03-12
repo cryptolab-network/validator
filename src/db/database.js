@@ -26,14 +26,19 @@ module.exports = class DatabaseHandler {
       id:  String,
       info: [{
         era: Number,
-        exposure: [
-          {
-            who: String,
-            value: Number,
-          }
-        ],
+        exposure:{
+          total: String,
+          own: Number,
+          others: [
+            {
+              who: String,
+              value: Number,
+            }
+          ]
+        },
         nominators: [Object],
         commission: Number,
+        apy: Number
       }],
     }, {toObject: {
       transform: function(doc, ret) {
@@ -69,6 +74,7 @@ module.exports = class DatabaseHandler {
       {$limit: size}
     ]);
     console.log('Executed query in', Date.now() - startTime, 'ms');
+    console.log(`validator size = ${validatorCollection.length}`);
     return {
       validator: validatorCollection
     }
@@ -106,7 +112,7 @@ module.exports = class DatabaseHandler {
       console.error(data);
       return false;
     }
-    if(!Array.isArray(data.exposure)) {
+    if(!Array.isArray(data.exposure.others)) {
       console.error('data.exposure is not an array');
       console.error(id);
       console.error(data);
@@ -118,9 +124,9 @@ module.exports = class DatabaseHandler {
       console.error(data);
       return false;
     }
-    for(let i = 0; i < data.exposure.length; i++) {
-      if(data.exposure[i] !== undefined) {
-        if(data.exposure[i].who === undefined || data.exposure[i].value === undefined) {
+    for(let i = 0; i < data.exposure.others.length; i++) {
+      if(data.exposure.others[i] !== undefined) {
+        if(data.exposure.others[i].who === undefined || data.exposure.others[i].value === undefined) {
           console.error('incorrect exposure format');
           console.error(id);
           console.error(data);
@@ -137,7 +143,7 @@ module.exports = class DatabaseHandler {
       const obj = v.toObject();
       obj.info.forEach(element => {
         delete element._id;
-        element.exposure.forEach((e)=>{
+        element.exposure.others.forEach((e)=>{
           delete e._id;
         });
       });

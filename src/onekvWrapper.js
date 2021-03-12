@@ -282,6 +282,18 @@ module.exports = class OnekvWrapper {
     }
 
     const startTime = new Date().getTime();
+
+    // fetch 1kv validators first.
+    if (option !== 'all') {
+      const res = await axios.get(`${NODE_RPC_URL}/valid`);
+      if (res.status !== 200 || res.data.length === 0) {
+        console.log(`no data`)
+        return {
+          errorCode: 1000,
+          errorMsg: 'Failed to fetch 1kv validators.' 
+        };
+      }
+    }
     
     let {validators, nominations} = await this.chaindata.getValidatorWaitingInfo();
     const dataCollectionEndTime = new Date().getTime();
@@ -324,11 +336,6 @@ module.exports = class OnekvWrapper {
       }
       await this.cachedata.update('validDetailAll', valid);
     } else {
-      const res = await axios.get(`${NODE_RPC_URL}/valid`);
-      if (res.status !== 200 && res.data.length === 0) {
-        return [];
-      }
-
       valid = res.data;
       let electedCount = 0;
       valid = await Promise.all(valid.map(async (candidate) => {

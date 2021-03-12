@@ -3,7 +3,9 @@ const CronJob = require('cron').CronJob;
 const axios = require('axios');
 const moment = require('moment');
 const CacheData = require('./cachedata');
+const BigNumber = require('bignumber.js');
 
+const KUSAMA_DECIMAL = 1000000000000;
 module.exports = class Scheduler {
   constructor(oneKvWrapper, chainData, database, cacheData) {
     this.oneKvWrapper = oneKvWrapper;
@@ -42,13 +44,24 @@ module.exports = class Scheduler {
       console.error('validator detail does not contain info of validators');
       return;
     }
+
+    const eraReward = await this.chainData.getEraTotalReward(info.activeEra - 1);
+    const validatorCount = await this.chainData.getCurrentValidatorCount();
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
+      const activeKSM = new BigNumber(v.exposure.total).toNumber()/KUSAMA_DECIMAL;
+      const commission = v.validatorPrefs.commission;
+      // console.log('-------');
+      // console.log(era, eraReward, validatorCount, commission, activeKSM);
+      const apy = (((eraReward / KUSAMA_DECIMAL) / validatorCount) * (1 - commission / 100) * 365) / activeKSM * 4;
+      v.apy = apy;
+      
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
         era: info.activeEra,
-        exposure: v.exposure.others,
+        exposure: v.exposure,
         nominators: v.nominators,
         commission: v.validatorPrefs?.commission / 10000000,
+        apy: v.apy,
       });
       if (result) {
         console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
