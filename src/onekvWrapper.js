@@ -300,8 +300,8 @@ module.exports = class OnekvWrapper {
     const startTime = new Date().getTime();
 
     // fetch 1kv validators first.
+    const res = await axios.get(`${NODE_RPC_URL}/valid`);
     if (option !== 'all') {
-      const res = await axios.get(`${NODE_RPC_URL}/valid`);
       if (res.status !== 200 || res.data.length === 0) {
         console.log(`no data`)
         return {
