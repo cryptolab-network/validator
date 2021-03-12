@@ -1,3 +1,4 @@
+const compress = require('koa-compress')
 const Koa = require('koa');
 const logger = require('koa-logger');
 const bodyparser = require('koa-bodyparser');
@@ -38,6 +39,20 @@ const app = new Koa();
 app.use(logger());
 app.use(cors());
 app.use(bodyparser());
+
+app.use(compress({
+  filter: function (content_type) {
+     return /text/i.test(content_type)
+  },
+  threshold: 2048,
+  gzip: {
+    flush: require('zlib').constants.Z_SYNC_FLUSH
+  },
+  deflate: {
+    flush: require('zlib').constants.Z_SYNC_FLUSH,
+  },
+  br: false,
+}));
 
 (async() => {
   try {
@@ -88,6 +103,7 @@ app.use(bodyparser());
       }
       console.log(`era=${era}`);
       const { validator } = await db.getValidators(era, size, page);
+      ctx.compress = true;
       ctx.body = validator;
     });
 
