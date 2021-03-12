@@ -44,8 +44,8 @@ module.exports = class Scheduler {
       console.error('validator detail does not contain info of validators');
       return;
     }
-    const eraReward = await chainData.getEraTotalReward(era - 1);
-    const validatorCount = await chainData.getCurrentValidatorCount();
+    const eraReward = await this.chainData.getEraTotalReward(era - 1);
+    const validatorCount = await this.chainData.getCurrentValidatorCount();
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
       const activeKSM = new BigNumber(v.info.exposure.total).toNumber()/KUSAMA_DECIMAL;
