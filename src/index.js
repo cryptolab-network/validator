@@ -72,11 +72,13 @@ app.use(compress({
 
     router.get(API.ValidCandidates, async (ctx) => {
       const valid = await onekvWrapper.valid();
+      ctx.compress = true;
       ctx.body = valid;
     });
 
     router.get(API.Nominators, async (ctx) => {
       const nominators = await onekvWrapper.nominators();
+      ctx.compress = true;
       ctx.body = nominators;
     });
 
@@ -84,11 +86,13 @@ app.use(compress({
       const { stash } = ctx.params;
       console.log(stash);
       const statistic = await onekvWrapper.statistic('kusama', stash);
+      ctx.compress = true;
       ctx.body = statistic;
     });
 
     router.get(API.FalseNominations, async (ctx) => {
       const falseNominator = await onekvWrapper.falseNominator();
+      ctx.compress = true;
       ctx.body = falseNominator;
     });
 
@@ -111,12 +115,14 @@ app.use(compress({
 
     router.get(API.Validators, async (ctx) => {
       const validators = await onekvWrapper.getValidators();
+      ctx.compress = true;
       ctx.body = validators;
     });
 
     router.get(API.validatorTrend, async (ctx) => {
       const { stash } = ctx.params;
       const { validator, objectData } = await db.getValidatorStatus(stash);
+      ctx.compress = true;
       ctx.body = objectData;
     });
 
@@ -136,12 +142,14 @@ app.use(compress({
           })
         }
       })
+      ctx.compress = true;
       ctx.body = list;
     })
 
     router.get(API.ValidDetail, async (ctx) => {
       const { option } = ctx.request.query;
       const valid = await onekvWrapper.getValidDetail(option);
+      ctx.compress = true;
       ctx.body = valid;
     });
 
@@ -149,6 +157,7 @@ app.use(compress({
       const { stash } = ctx.params;
       console.log(stash);
       const statistic = await onekvWrapper.statistic('polkadot', stash);
+      ctx.compress = true;
       ctx.body = statistic;
     });
 
@@ -156,6 +165,7 @@ app.use(compress({
       const { stash } = ctx.params;
       console.log(stash);
       const statistic = await onekvWrapper.statistic('kusama', stash);
+      ctx.compress = true;
       ctx.body = statistic;
     });
 
