@@ -61,6 +61,17 @@ module.exports = class Scheduler {
         console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
         v.apy = 0;
       }
+
+      let display = v.stashId;
+      if(v.identity !== undefined) {
+        if(v.identity.displayParent !== undefined) {
+          display = v.identity.displayParent + '/' + v.identity.display; 
+        } else {
+          display = v.identity.display; 
+        }
+      } else {
+        display = v.stashId;
+      }
       
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
         era: info.activeEra,
@@ -68,6 +79,7 @@ module.exports = class Scheduler {
         nominators: v.nominators,
         commission: v.validatorPrefs?.commission / 10000000,
         apy: v.apy,
+        identity: {display: display},
       });
       if (result) {
         console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
