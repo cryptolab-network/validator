@@ -23,8 +23,10 @@ module.exports = class OnekvWrapper {
     }
 
     const validCache = await this.cachedata.fetch(activeEra, 'valid');
-    if (validCache !== null) {
-      return validCache;
+    if (validCache !== undefined) {
+      if (validCache !== null && validCache !== '') {
+        return validCache;
+      }
     }
     
     const res = await axios.get(`${NODE_RPC_URL}/valid`);
@@ -51,7 +53,6 @@ module.exports = class OnekvWrapper {
       }
       return candidate;
     })
-
     valid = {
       activeEra,
       validatorCount: valid.length,
@@ -287,13 +288,17 @@ module.exports = class OnekvWrapper {
 
     if (option === 'all') {
       const validDetailAllCache = await this.cachedata.fetch(activeEra, 'validDetailAll');
-      if (validDetailAllCache !== null) {
-        return validDetailAllCache;
+      if(validDetailAllCache !== undefined) {
+        if (validDetailAllCache !== null) {
+          return validDetailAllCache;
+        }
       }
     } else {
       const validDetailCache = await this.cachedata.fetch(activeEra, 'validDetail');
-      if (validDetailCache !== null) {
-        return validDetailCache;
+      if(validDetailCache !== undefined) {
+        if (validDetailCache !== null) {
+          return validDetailCache;
+        }
       }
     }
 

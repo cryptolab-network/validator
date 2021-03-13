@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ./src/index.js",
+    "start": "node ./src/index.js > log.txt 2>&1",
     "dev": "nodemon ./src/index.js",
     "startDb": ".\\bin\\mongodb-win32-x86_64-windows-4.4.4\\bin\\mongod.exe --dbpath .\\data"
   },
