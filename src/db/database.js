@@ -24,6 +24,9 @@ module.exports = class DatabaseHandler {
   __initSchema() {
     this.validatorSchema_ = new Schema({
       id:  String,
+      identity: {
+        display: String
+      },
       info: [{
         era: Number,
         exposure:{
@@ -38,7 +41,7 @@ module.exports = class DatabaseHandler {
         },
         nominators: [Object],
         commission: Number,
-        apy: Number
+        apy: Number,
       }],
     }, {toObject: {
       transform: function(doc, ret) {
@@ -89,18 +92,21 @@ module.exports = class DatabaseHandler {
     if(validator === undefined || validator.length === 0) {
       await this.validators.create({
         id: id,
+        identity: data.identity,
         info: [
           data
         ]
       })
     } else {
       const eraData = await this.validators.findOne({id: id}, {'info': {$elemMatch: {era: data.era}}}, {}).exec();
+      validator[0].identity = data.identity;
+      await validator[0].save();
       if(eraData.info !== undefined && eraData.info?.length > 0) { // the data of this era exist, dont add a new one
         // console.log(`duplicated data of era ${data.era}`);
         return true;
       }
       await validator[0].info.push(data);
-      validator[0].save();
+      await validator[0].save();
     }
     return true;
   }
