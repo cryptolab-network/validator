@@ -25,7 +25,6 @@ module.exports = class Scheduler {
       await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
       console.log(`http://localhost:${keys.PORT}/api/validDetail`);
       await this.__collectValidatorStatus();
-      // await this.__collectNominatorBalances();
       this.isCaching = false;
     }, null, true, 'America/Los_Angeles', null, true);
     
@@ -54,11 +53,14 @@ module.exports = class Scheduler {
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
       const activeKSM = new BigNumber(v.exposure.total).toNumber()/KUSAMA_DECIMAL;
-      const commission = v.validatorPrefs.commission;
-      // console.log('-------');
-      // console.log(era, eraReward, validatorCount, commission, activeKSM);
-      const apy = (((eraReward / KUSAMA_DECIMAL) / validatorCount) * (1 - commission / 100) * 365) / activeKSM * 4;
+      const commission = v.validatorPrefs.commission / 10000000;
+      // console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
+      const apy = activeKSM === 0 ? 0 : (((eraReward / KUSAMA_DECIMAL) / validatorCount) * (1 - commission/100) * 365) / activeKSM * 4;
       v.apy = apy;
+      if (isNaN(apy)) {
+        console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
+        v.apy = 0;
+      }
       
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
         era: info.activeEra,
