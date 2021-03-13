@@ -61,7 +61,6 @@ module.exports = class Scheduler {
         console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
         v.apy = 0;
       }
-
       let display = v.stashId;
       if(v.identity !== undefined) {
         if(v.identity.displayParent !== undefined) {
@@ -72,7 +71,6 @@ module.exports = class Scheduler {
       } else {
         display = v.stashId;
       }
-      
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
         era: info.activeEra,
         exposure: v.exposure,
