@@ -37,7 +37,9 @@ db.connect(keys.MONGO_ACCOUNT, keys.MONGO_PASSWORD, keys.MONGO_URL, keys.MONGO_P
 
 const app = new Koa();
 app.use(logger());
-app.use(cors());
+app.use(cors({
+  origin: '*'
+}));
 app.use(bodyparser());
 
 app.use(compress({
