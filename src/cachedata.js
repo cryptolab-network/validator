@@ -8,17 +8,28 @@ module.exports = class CacheData {
   }
 
   fetch = async (activeEra, endpoint) => {
-    let data = fs.readFileSync(this._filepath);
-    data = JSON.parse(data);
-    if (data[endpoint] !== undefined && parseInt(activeEra) === data[endpoint].activeEra) {
-      return data[endpoint];
+    try {
+      let data = fs.readFileSync(this._filepath);
+      data = JSON.parse(data);
+      if (data[endpoint] !== undefined && parseInt(activeEra) === data[endpoint].activeEra) {
+        return data[endpoint];
+      }
+    } catch {
+      return null;
     }
-    return null;
   }
 
   update = async (endpoint, newData) => {
-    let data = fs.readFileSync(this._filepath);
-    data = JSON.parse(data);
+    let data = undefined;
+    try {
+      data = fs.readFileSync(this._filepath);
+      data = JSON.parse(data);
+    } catch {
+      data = {};
+    }
+    if(data === undefined) {
+      data = {};
+    }
     data[endpoint] = newData;
     fs.writeFileSync(this._filepath, JSON.stringify(data, undefined, 1));
   }
