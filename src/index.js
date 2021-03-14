@@ -60,12 +60,6 @@ class Cache {
 }
 const cache = new Cache();
 
-app.use(async (ctx, next) => {
-  ctx.set('Access-Control-Allow-Origin', '*');
-  ctx.set('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
-  await next();
-});
-
 app.use(compress({
   filter: function (content_type) {
      return /text/i.test(content_type)
