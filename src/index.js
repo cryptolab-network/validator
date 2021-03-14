@@ -1,6 +1,7 @@
 const compress = require('koa-compress')
 const Koa = require('koa');
 const logger = require('koa-logger');
+const koaCash = require('koa-cash');
 const bodyparser = require('koa-bodyparser');
 const cors = require('koa2-cors');
 const Router = require('koa-router');
@@ -46,6 +47,19 @@ app.use(cors({
 }));
 app.use(bodyparser());
 
+class Cache {
+  constructor() {
+    this.cache = {};
+  }
+  get(key) {
+    return this.cache[key];
+  }
+  set(key, value) {
+    this.cache[key] = value;
+  }
+}
+const cache = new Cache();
+
 app.use(compress({
   filter: function (content_type) {
      return /text/i.test(content_type)
@@ -58,6 +72,16 @@ app.use(compress({
     flush: require('zlib').constants.Z_SYNC_FLUSH,
   },
   br: false,
+}));
+
+app.use(koaCash({
+  compression: true,
+  get(key, maxAge) {
+    return cache.get(key);
+  },
+  set(key, value) {
+    cache.set(key, value);
+  },
 }));
 
 (async() => {
@@ -101,6 +125,9 @@ app.use(compress({
     });
 
     router.get(API.AllValidators, async (ctx) => {
+      if (await ctx.cashed(300000)) {
+        return;
+      }
       const size = parseInt(ctx.request.query.size);
       const page = parseInt(ctx.request.query.page);
       const [era, err] = await chainData.getActiveEraIndex();
@@ -131,6 +158,9 @@ app.use(compress({
     });
 
     router.get(API.onekvlist, async (ctx) => {
+      if (await ctx.cashed(300000)) {
+        return;
+      }
       const rate = (ctx.request.query.rate/100) || 1;
       const validators = await onekvWrapper.getValidators();
       let list = [];
@@ -151,6 +181,10 @@ app.use(compress({
     })
 
     router.get(API.ValidDetail, async (ctx) => {
+      if (await ctx.cashed(300000)) {
+        console.log(ctx.response.headers);
+        return;
+      }
       const { option } = ctx.request.query;
       const valid = await onekvWrapper.getValidDetail(option);
       ctx.compress = true;
