@@ -3,7 +3,6 @@ const Koa = require('koa');
 const logger = require('koa-logger');
 const koaCash = require('koa-cash');
 const bodyparser = require('koa-bodyparser');
-const cors = require('koa2-cors');
 const Router = require('koa-router');
 
 const ApiHandler = require('./ApiHandler');
@@ -65,14 +64,6 @@ app.use(compress({
     flush: require('zlib').constants.Z_SYNC_FLUSH,
   },
   br: false,
-}));
-
-app.use(cors({
-  origin: function(ctx) {
-    return '*';
-  },
-  exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
-  maxAge: 600,
 }));
 
 app.use(koaCash({
