@@ -173,10 +173,6 @@ app.use(koaCash({
     })
 
     router.get(API.ValidDetail, async (ctx) => {
-      if (await ctx.cashed(300000)) {
-        console.log(ctx.response.headers);
-        return;
-      }
       const { option } = ctx.request.query;
       const valid = await onekvWrapper.getValidDetail(option);
       ctx.compress = true;
