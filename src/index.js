@@ -3,7 +3,6 @@ const Koa = require('koa');
 const logger = require('koa-logger');
 const koaCash = require('koa-cash');
 const bodyparser = require('koa-bodyparser');
-const cors = require('koa2-cors');
 const Router = require('koa-router');
 
 const ApiHandler = require('./ApiHandler');
@@ -38,13 +37,6 @@ db.connect(keys.MONGO_ACCOUNT, keys.MONGO_PASSWORD, keys.MONGO_URL, keys.MONGO_P
 
 const app = new Koa();
 app.use(logger());
-app.use(cors({
-  origin: function(ctx) {
-    return '*';
-  },
-  exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
-  maxAge: 600,
-}));
 app.use(bodyparser());
 
 class Cache {

@@ -9,7 +9,7 @@ module.exports = class DatabaseHandler {
   connect(name, pass, ip, port, dbName) {
     const self = this;
     this.validators = mongoose.model('Validators', this.validatorSchema_);
-    mongoose.connect(`mongodb+srv://${name}:${pass}@${ip}/${dbName}`, {
+    mongoose.connect(`mongodb://${name}:${pass}@${ip}/${dbName}`, {
       useNewUrlParser: true, 
       useUnifiedTopology: true,
       poolSize: 10
