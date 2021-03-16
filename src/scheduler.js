@@ -19,12 +19,16 @@ module.exports = class Scheduler {
         return;
       }
       this.isCaching = true;
-      console.log('retrieving validator detail @ ' + moment());
-      await axios.get(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
-      console.log(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
-      await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
-      console.log(`http://localhost:${keys.PORT}/api/validDetail`);
-      await this.__collectValidatorStatus();
+      try {
+        console.log('retrieving validator detail @ ' + moment());
+        await axios.get(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
+        console.log(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
+        await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
+        console.log(`http://localhost:${keys.PORT}/api/validDetail`);
+        await this.__collectValidatorStatus();
+      } catch {
+        console.log('schedule retrieving data error');
+      }
       this.isCaching = false;
     }, null, true, 'America/Los_Angeles', null, true);
     
