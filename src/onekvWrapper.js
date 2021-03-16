@@ -345,7 +345,8 @@ module.exports = class OnekvWrapper {
         if (validator.active){
           electedCount++;
         }
-        console.log(`${i++}/${validators.length}`);
+        (i%10 === 0) ? console.log(`${i++}/${validators.length}`) : i++;
+        
         return validator;
       });
       valid = {
