@@ -112,15 +112,45 @@ app.use(koaCash({
     });
 
     router.get(API.ValidCandidates, async (ctx) => {
-      const valid = await onekvWrapper.valid();
-      ctx.compress = true;
-      ctx.body = valid;
+      try {
+        const valid = await onekvWrapper.valid();
+        ctx.compress = true;
+        ctx.body = valid;
+      } catch (err) {
+        if (err.response.status === 503) {
+          ctx.body = {
+            errorCode: 503, // server error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        } else {
+          ctx.compress = true;
+          ctx.body = {
+            errorCode: 9999, // unknown error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        }
+      }
     });
 
     router.get(API.Nominators, async (ctx) => {
-      const nominators = await onekvWrapper.nominators();
-      ctx.compress = true;
-      ctx.body = nominators;
+      try {
+        const nominators = await onekvWrapper.nominators();
+        ctx.compress = true;
+        ctx.body = nominators;
+      } catch (err) {
+        if (err.response.status === 503) {
+          ctx.body = {
+            errorCode: 503, // server error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        } else {
+          ctx.compress = true;
+          ctx.body = {
+            errorCode: 9999, // unknown error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        }
+      }
     });
 
     router.get(API.Statistic, async (ctx) => {
@@ -132,9 +162,24 @@ app.use(koaCash({
     });
 
     router.get(API.FalseNominations, async (ctx) => {
-      const falseNominator = await onekvWrapper.falseNominator();
-      ctx.compress = true;
-      ctx.body = falseNominator;
+      try {
+        const falseNominator = await onekvWrapper.falseNominator();
+        ctx.compress = true;
+        ctx.body = falseNominator;
+      } catch (err) {
+        if (err.response.status === 503) {
+          ctx.body = {
+            errorCode: 503, // server error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        } else {
+          ctx.compress = true;
+          ctx.body = {
+            errorCode: 9999, // unknown error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        }
+      }
     });
 
     router.get(API.AllValidators, async (ctx) => {
@@ -146,26 +191,56 @@ app.use(koaCash({
         console.log('get data from koa cash failed');
         console.log(err);
       }
-      const size = parseInt(ctx.request.query.size);
-      const page = parseInt(ctx.request.query.page);
-      const [era, err] = await chainData.getActiveEraIndex();
-      if ((size < 1 || size > keys.PAGE_SIZE) && (page < 0)) {
-        ctx.status = 400;
-        ctx.body = {
-          error: `Invalid parameter. size must be >= 1 and <=${keys.PAGE_SIZE}. page must be >=0`
+      try {
+        const size = parseInt(ctx.request.query.size);
+        const page = parseInt(ctx.request.query.page);
+        const [era, err] = await chainData.getActiveEraIndex();
+        if ((size < 1 || size > keys.PAGE_SIZE) && (page < 0)) {
+          ctx.status = 400;
+          ctx.body = {
+            error: `Invalid parameter. size must be >= 1 and <=${keys.PAGE_SIZE}. page must be >=0`
+          }
+          return;
         }
-        return;
+        console.log(`era=${era}`);
+        const { validator } = await db.getValidators(era, size, page);
+        ctx.compress = true;
+        ctx.body = validator;
+      } catch (err) {
+        if (err.response.status === 503) {
+          ctx.body = {
+            errorCode: 503, // server error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        } else {
+          ctx.compress = true;
+          ctx.body = {
+            errorCode: 9999, // unknown error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        }
       }
-      console.log(`era=${era}`);
-      const { validator } = await db.getValidators(era, size, page);
-      ctx.compress = true;
-      ctx.body = validator;
     });
 
     router.get(API.Validators, async (ctx) => {
-      const validators = await onekvWrapper.getValidators();
-      ctx.compress = true;
-      ctx.body = validators;
+      try {
+        const validators = await onekvWrapper.getValidators();
+        ctx.compress = true;
+        ctx.body = validators;
+      } catch (err) {
+        if (err.response.status === 503) {
+          ctx.body = {
+            errorCode: 503, // server error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        } else {
+          ctx.compress = true;
+          ctx.body = {
+            errorCode: 9999, // unknown error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        }
+      }
     });
 
     router.get(API.validatorTrend, async (ctx) => {
@@ -179,30 +254,60 @@ app.use(koaCash({
       if (await ctx.cashed(300000)) {
         return;
       }
-      const rate = (ctx.request.query.rate/100) || 1;
-      const validators = await onekvWrapper.getValidators();
-      let list = [];
-      validators.valid.forEach((validator) => {
-        if (validator.electedRate <= rate) {
-          list.push({
-            stash: validator.stash,
-            name: validator.name,
-            rank: validator.rank,
-            electedRate: validator.electedRate,
-            eras: `from ${validator.stakerPoints[0].era} to ${validator.stakerPoints[validator.stakerPoints.length - 1].era}`,
-            stakerPoints: validator.stakerPoints,
-          })
+      try {
+        const rate = (ctx.request.query.rate/100) || 1;
+        const validators = await onekvWrapper.getValidators();
+        let list = [];
+        validators.valid.forEach((validator) => {
+          if (validator.electedRate <= rate) {
+            list.push({
+              stash: validator.stash,
+              name: validator.name,
+              rank: validator.rank,
+              electedRate: validator.electedRate,
+              eras: `from ${validator.stakerPoints[0].era} to ${validator.stakerPoints[validator.stakerPoints.length - 1].era}`,
+              stakerPoints: validator.stakerPoints,
+            })
+          }
+        })
+        ctx.compress = true;
+        ctx.body = list;
+      } catch (err) {
+        if (err.response.status === 503) {
+          ctx.body = {
+            errorCode: 503, // server error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        } else {
+          ctx.compress = true;
+          ctx.body = {
+            errorCode: 9999, // unknown error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
         }
-      })
-      ctx.compress = true;
-      ctx.body = list;
+      }
     })
 
     router.get(API.ValidDetail, async (ctx) => {
-      const { option } = ctx.request.query;
-      const valid = await onekvWrapper.getValidDetail(option);
-      ctx.compress = true;
-      ctx.body = valid;
+      try {
+        const { option } = ctx.request.query;
+        const valid = await onekvWrapper.getValidDetail(option);
+        ctx.compress = true;
+        ctx.body = valid;
+      } catch (err) {
+        if (err.response.status === 503) {
+          ctx.body = {
+            errorCode: 503, // server error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        } else {
+          ctx.compress = true;
+          ctx.body = {
+            errorCode: 9999, // unknown error
+            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          }
+        }
+      }
     });
 
     router.get(API.polkadot, async (ctx) => {
