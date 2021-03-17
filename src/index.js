@@ -43,11 +43,24 @@ class Cache {
   constructor() {
     this.cache = {};
   }
-  get(key) {
-    return this.cache[key];
+  get(key, maxAge) {
+    const data = this.cache[key];
+    if(data === undefined) {
+      return;
+    }
+    if(new Date() - data.timestamp > maxAge) {
+      console.log('cache expired');
+      return;
+    }
+    console.log('cache hit');
+    return data.value;
   }
   set(key, value) {
-    this.cache[key] = value;
+    console.log('cache set 2');
+    this.cache[key] = {
+      value: value,
+      timestamp: new Date(),
+    }
   }
 }
 const cache = new Cache();
@@ -68,11 +81,19 @@ app.use(compress({
 
 app.use(koaCash({
   compression: true,
+  setCachedHeader: true,
   get(key, maxAge) {
-    return cache.get(key);
+    return new Promise((resolve, reject)=>{
+      resolve(cache.get(key, maxAge));
+    }); 
   },
   set(key, value) {
-    cache.set(key, value);
+    console.log('cache set');
+    return new Promise((resolve, reject)=>{
+      cache.set(key, value);
+      resolve();
+    });
+    
   },
 }));
 
@@ -162,8 +183,13 @@ app.use(koaCash({
     });
 
     router.get(API.AllValidators, async (ctx) => {
-      if (await ctx.cashed(300000)) {
-        return;
+      try {
+        if (await ctx.cashed(300000)) {
+          return;
+        }
+      } catch(err) {
+        console.log('get data from koa cash failed');
+        console.log(err);
       }
       try {
         const size = parseInt(ctx.request.query.size);
