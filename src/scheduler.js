@@ -83,9 +83,9 @@ module.exports = class Scheduler {
         apy: v.apy,
         identity: {display: display},
       });
-      if (result) {
-        console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
-      }
+      // if (result) {
+      //   console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
+      // }
     }
   }
 }
