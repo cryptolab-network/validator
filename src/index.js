@@ -19,7 +19,8 @@ const ONEKV_PREFIX = '/1kv';
 
 const API = {
   ValidCandidates: API_PREFIX + '/valid',
-  Nominators: API_PREFIX + ONEKV_PREFIX + '/nominators',
+  OnekvNominators: API_PREFIX + ONEKV_PREFIX + '/nominators',
+  Nominators: API_PREFIX + '/nominators',
   Statistic: API_PREFIX + '/statistic/:stash',
   FalseNominations: API_PREFIX + '/falseNominations',
   Validators: API_PREFIX + '/validators',
@@ -133,9 +134,9 @@ app.use(koaCash({
       }
     });
 
-    router.get(API.Nominators, async (ctx) => {
+    router.get(API.OnekvNominators, async (ctx) => {
       try {
-        const nominators = await onekvWrapper.nominators();
+        const nominators = await onekvWrapper.onekvNominators();
         ctx.compress = true;
         ctx.body = nominators;
       } catch (err) {
@@ -150,6 +151,21 @@ app.use(koaCash({
             errorCode: 9999, // unknown error
             errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
           }
+        }
+      }
+    });
+
+    router.get(API.Nominators, async (ctx) => {
+      try {
+        const nominators = await onekvWrapper.nominators();
+        ctx.compress = true;
+        ctx.body = nominators;
+      } catch (err) {
+        console.log(err);
+        ctx.compress = true;
+        ctx.body = {
+          errorCode: 9999, // unknown error
+          errorMsg: `Failed to fetch nominators from chaindata`,
         }
       }
     });

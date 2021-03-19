@@ -150,8 +150,38 @@ module.exports = class ChainData {
 
   getNominators = async () => {
     const api = await this.handler.getApi();
-    const nominators = await api.query.staking.nominators.entries();
-    return nominators;
+    let nominators = await api.query.staking.nominators.entries();
+
+    nominators = await Promise.all(
+      nominators.map((nominator) => 
+        api.derive.balances.all(nominator[0].toHuman()[0]).then((balance) => {
+          return {
+            ...nominator,
+            balance
+          }
+        })
+      )
+    )
+
+    const nominations = nominators.map((nominator) => {
+      if(nominator[1] === null) {
+        return  {
+          nominator: nominator[1],
+          targets: [],
+          balance: null,
+        }
+      }
+      const accountId = nominator[0].toHuman()[0];
+      const targets = nominator[1].toHuman().targets;
+      const balance = JSON.parse(JSON.stringify(nominator.balance));
+      return {
+        accountId,
+        targets,
+        balance
+      }
+    })
+
+    return nominations;
   }
 
   getNominatorBalance = async (nominatorId) => {

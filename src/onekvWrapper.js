@@ -65,11 +65,11 @@ module.exports = class OnekvWrapper {
     return valid;
   }
 
-  nominators = async () => {
+  onekvNominators = async () => {
     // retrive active era
     const [activeEra, err] = await this.chaindata.getActiveEraIndex();
     // check cache data to retive data
-    const data = await this.cachedata.fetch(activeEra, 'nominators');
+    const data = await this.cachedata.fetch(activeEra, 'onekvNominators');
     if (data !== undefined) {
       return data;
     }
@@ -121,8 +121,13 @@ module.exports = class OnekvWrapper {
       nominators
     }
 
-    await this.cachedata.update('nominators', nominators);
+    await this.cachedata.update('onekvNominators', nominators);
 
+    return nominators;
+  }
+
+  nominators = async () => {
+    const nominators = await this.chaindata.getNominators();
     return nominators;
   }
 
