@@ -78,16 +78,22 @@ module.exports = class Scheduler {
       }
       let commissionChanged = 0;
       const commissionPct =  v.validatorPrefs?.commission / 10000000;
-      const lastValidatorData = await this.database.getValidatorStatus(v.stashId.toString());
+      const data = await this.database.getValidatorStatusOfEra(v.stashId.toString(), info.activeEra - 1);
+      const lastValidatorData = data.validator;
       if(lastValidatorData.info !== undefined) {
-        const info = lastValidatorData.info;
-        if(info.commission != commissionPct) {
-          if(commissionPct > info.commission) {
-            commissionChanged = 1;
-          } else if(commissionPct < info.commission) {
-            commissionChanged = 2;
-          } else {
-            commissionChanged = 0;
+        const info = lastValidatorData.info[0];
+        if(info !== undefined) {
+          if(info.commission != commissionPct) {
+            console.log(info.commission, commissionPct);
+            if(commissionPct > info.commission) {
+              console.log('commission up');
+              commissionChanged = 1;
+            } else if(commissionPct < info.commission) {
+              console.log('commission down');
+              commissionChanged = 2;
+            } else {
+              commissionChanged = 0;
+            }
           }
         }
       }

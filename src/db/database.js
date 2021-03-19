@@ -43,6 +43,9 @@ module.exports = class DatabaseHandler {
         commission: Number,
         apy: Number,
       }],
+      statusChange: {
+        commission: Number, // 0: no change, 1: up, 2: down
+      }
     }, {toObject: {
       transform: function(doc, ret) {
         delete ret._id;
@@ -51,11 +54,37 @@ module.exports = class DatabaseHandler {
     }})
   }
 
+  async getValidatorStatusOfEra(id, era) {
+    const startTime = Date.now();
+    let validator = await this.validators.aggregate([
+        {$match: {
+          id: id,
+          'info.era': era
+        }},
+        {$project: {
+          info: {
+            $filter: {
+              input: '$info',
+              as: 'info',
+              cond: { $eq: ['$$info.era', era]}
+            }
+          }
+        }}
+    ]).exec();
+    if(validator.length > 0) {
+      validator = validator[0];
+    }
+    // console.log('Executed query getValidatorStatusOfEra in', Date.now() - startTime, 'ms');
+    return {
+      validator: validator,
+    };
+  }
+
   async getValidatorStatus(id) {
     const startTime = Date.now();
     const validator = await this.validators.find({ id: id }).exec();
     const result = this.__validatorSerialize(validator);
-    console.log('Executed query in', Date.now() - startTime, 'ms');
+    console.log('Executed query getValidatorStatus in', Date.now() - startTime, 'ms');
     return {
       validator: validator,
       objectData: result
@@ -95,11 +124,15 @@ module.exports = class DatabaseHandler {
         identity: data.identity,
         info: [
           data
-        ]
+        ],
+        statusChange: {
+          commission: 0,
+        }
       })
     } else {
       const eraData = await this.validators.findOne({id: id}, {'info': {$elemMatch: {era: data.era}}}, {}).exec();
       validator[0].identity = data.identity;
+      validator[0].statusChange.commission = data.commissionChanged;
       await validator[0].save();
       if(eraData.info !== undefined && eraData.info?.length > 0) { // the data of this era exist, dont add a new one
         // console.log(`duplicated data of era ${data.era}`);
