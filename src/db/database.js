@@ -84,7 +84,7 @@ module.exports = class DatabaseHandler {
     const startTime = Date.now();
     const validator = await this.validators.find({ id: id }).exec();
     const result = this.__validatorSerialize(validator);
-    console.log('Executed query getValidatorStatus in', Date.now() - startTime, 'ms');
+    // console.log('Executed query in', Date.now() - startTime, 'ms');
     return {
       validator: validator,
       objectData: result

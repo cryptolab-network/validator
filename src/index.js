@@ -327,7 +327,16 @@ app.use(koaCash({
     });
 
     router.get(API.test, async (ctx) => {
-      ctx.body = [];
+      try {
+        // const { option } = ctx.request.query;
+        // const valid = await onekvWrapper.getValidDetailTest(option);
+        // ctx.compress = true;
+        // ctx.body = valid;
+        ctx.body = [];
+      } catch (err) {
+        console.log(err);
+        ctx.body = [];
+      }
     });
 
     app.use(router.routes());

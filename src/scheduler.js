@@ -55,6 +55,7 @@ module.exports = class Scheduler {
 
     const eraReward = await this.chainData.getEraTotalReward(info.activeEra - 1);
     const validatorCount = await this.chainData.getCurrentValidatorCount();
+    console.log('Start to store validator status to db');
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
       const activeKSM = new BigNumber(v.exposure.total).toNumber()/KUSAMA_DECIMAL;
@@ -63,7 +64,7 @@ module.exports = class Scheduler {
       const apy = activeKSM === 0 ? 0 : (((eraReward / KUSAMA_DECIMAL) / validatorCount) * (1 - commission/100) * 365) / activeKSM * 4;
       v.apy = apy;
       if (isNaN(apy)) {
-        console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
+        // console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
         v.apy = 0;
       }
       let display = v.stashId;
@@ -106,9 +107,10 @@ module.exports = class Scheduler {
         identity: {display: display},
         commissionChanged: commissionChanged,
       });
-      if (result) {
-        console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
-      }
+      // if (result) {
+      //   console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
+      // }
     }
+    console.log('done.');
   }
 }
