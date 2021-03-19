@@ -245,7 +245,7 @@ module.exports = class ChainData {
       }
       const accountId = nominator[0].toHuman()[0];
       const targets = nominator[1].toHuman().targets;
-      const balance = nominator.balance;
+      const balance = JSON.parse(JSON.stringify(nominator.balance));
       return {
         accountId,
         targets,
