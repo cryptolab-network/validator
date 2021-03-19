@@ -15,10 +15,11 @@ const DatabaseHandler = require('./db/database');
 const Scheduler = require('./scheduler');
 
 const API_PREFIX = '/api';
+const ONEKV_PREFIX = '/1kv';
 
 const API = {
   ValidCandidates: API_PREFIX + '/valid',
-  Nominators: API_PREFIX + '/nominators',
+  Nominators: API_PREFIX + ONEKV_PREFIX + '/nominators',
   Statistic: API_PREFIX + '/statistic/:stash',
   FalseNominations: API_PREFIX + '/falseNominations',
   Validators: API_PREFIX + '/validators',
