@@ -42,7 +42,7 @@ module.exports = class Scheduler {
 
   async __collectValidatorStatus() {
     console.log('Collecting validator status');
-    const info = await this.oneKvWrapper.getValidDetail('all');
+    const info = await this.oneKvWrapper.getValidDetail({target: 'all', useChainData: true});
     if(info === undefined) {
       console.error('info is undefined');
       return;
