@@ -14,7 +14,7 @@ module.exports = class Scheduler {
     this.cacheData = cacheData
     this.isCaching = false;
      // request api every 1 hour to trigger the data cache
-     this.job_ = new CronJob('50 */1 * * *', async () => {
+     this.job_ = new CronJob('30 */1 * * *', async () => {
       if(this.isCaching) {
         return;
       }
@@ -26,7 +26,8 @@ module.exports = class Scheduler {
         await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
         console.log(`http://localhost:${keys.PORT}/api/validDetail`);
         await this.__collectValidatorStatus();
-      } catch {
+      } catch (err){
+        console.log(err);
         console.log('schedule retrieving data error');
       }
       this.isCaching = false;
@@ -41,7 +42,7 @@ module.exports = class Scheduler {
 
   async __collectValidatorStatus() {
     console.log('Collecting validator status');
-    const info = await this.oneKvWrapper.getValidDetail('all');
+    const info = await this.oneKvWrapper.getValidDetail({target: 'all', useChainData: true});
     if(info === undefined) {
       console.error('info is undefined');
       return;
@@ -76,13 +77,35 @@ module.exports = class Scheduler {
       } else {
         display = v.stashId;
       }
+      let commissionChanged = 0;
+      const commissionPct =  v.validatorPrefs?.commission / 10000000;
+      const data = await this.database.getValidatorStatusOfEra(v.stashId.toString(), info.activeEra - 1);
+      const lastValidatorData = data.validator;
+      if(lastValidatorData.info !== undefined) {
+        const info = lastValidatorData.info[0];
+        if(info !== undefined) {
+          if(info.commission != commissionPct) {
+            console.log(info.commission, commissionPct);
+            if(commissionPct > info.commission) {
+              console.log('commission up');
+              commissionChanged = 1;
+            } else if(commissionPct < info.commission) {
+              console.log('commission down');
+              commissionChanged = 2;
+            } else {
+              commissionChanged = 0;
+            }
+          }
+        }
+      }
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
         era: info.activeEra,
         exposure: v.exposure,
         nominators: v.nominators,
-        commission: v.validatorPrefs?.commission / 10000000,
+        commission: commissionPct,
         apy: v.apy,
         identity: {display: display},
+        commissionChanged: commissionChanged,
       });
       // if (result) {
       //   console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);

@@ -278,26 +278,27 @@ module.exports = class OnekvWrapper {
     return data;
   }
 
-  getValidDetail = async (option = '1kv') => {
-    console.log(`option = ${option}`);
+  getValidDetail = async (option = {target: '1kv', useChainData: false}) => {
     const [activeEra, err] = await this.chaindata.getActiveEraIndex();
     if (err !== null) {
       console.log(err);
       return [];
     }
 
-    if (option === 'all') {
-      const validDetailAllCache = await this.cachedata.fetch(activeEra, 'validDetailAll');
-      if(validDetailAllCache !== undefined) {
-        if (validDetailAllCache !== null) {
-          return validDetailAllCache;
+    if(!option.useChainData) {
+      if (option.target === 'all') {
+        const validDetailAllCache = await this.cachedata.fetch(activeEra, 'validDetailAll');
+        if(validDetailAllCache !== undefined) {
+          if (validDetailAllCache !== null) {
+            return validDetailAllCache;
+          }
         }
-      }
-    } else {
-      const validDetailCache = await this.cachedata.fetch(activeEra, 'validDetail');
-      if(validDetailCache !== undefined) {
-        if (validDetailCache !== null) {
-          return validDetailCache;
+      } else {
+        const validDetailCache = await this.cachedata.fetch(activeEra, 'validDetail');
+        if(validDetailCache !== undefined) {
+          if (validDetailCache !== null) {
+            return validDetailCache;
+          }
         }
       }
     }
@@ -306,7 +307,7 @@ module.exports = class OnekvWrapper {
 
     // fetch 1kv validators first.
     const res = await axios.get(`${NODE_RPC_URL}/valid`);
-    if (option !== 'all') {
+    if (option.target !== 'all') {
       if (res.status !== 200 || res.data.length === 0) {
         console.log(`no data`)
         return {
@@ -328,7 +329,7 @@ module.exports = class OnekvWrapper {
     let electedCount = 0;
     let valid;
     let i = 0;
-    if (option === 'all') {
+    if (option.target === 'all') {
       valid = validators.map((validator) => {
         const nominators = nominations.filter((nomination) => {
           return nomination.targets.some((target) => {

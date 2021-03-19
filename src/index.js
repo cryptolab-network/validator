@@ -291,7 +291,7 @@ app.use(koaCash({
     router.get(API.ValidDetail, async (ctx) => {
       try {
         const { option } = ctx.request.query;
-        const valid = await onekvWrapper.getValidDetail(option);
+        const valid = await onekvWrapper.getValidDetail({target: option});
         ctx.compress = true;
         ctx.body = valid;
       } catch (err) {
