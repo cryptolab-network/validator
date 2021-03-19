@@ -70,61 +70,60 @@ module.exports = class OnekvWrapper {
     const [activeEra, err] = await this.chaindata.getActiveEraIndex();
     // check cache data to retive data
     const data = await this.cachedata.fetch(activeEra, 'nominators');
-    if (data !== null) {
+    if (data !== undefined) {
       return data;
     }
 
     let res = await axios.get(`${NODE_RPC_URL}/nominators`);
-    if (res.status === 200) {
-      let nominators = res.data;
 
-      let validCandidates = await this.valid();
-
-      nominators = nominators.map((nominator, index, array) => {
-        const current = nominator.current.map((stash, index, array) => {
-          let candidate = validCandidates.valid.find((c, index, array) => {
-            return stash === c.stash;
-          });
-          if (candidate === undefined) {
-            return {
-              stash,
-              name: null,
-              elected: null
-            }
-          } else {
-            return {
-              stash: stash,
-              name: candidate.name,
-              elected: candidate.elected
-            }
-          }
-        });
-        return {
-          current,
-          lastNomination: moment(nominator.lastNomination).format(),
-          createdAt: moment(nominator.createdAt).format(),
-          _id: nominator._id,
-          address: nominator.address,
-          __v: nominator.__v,
-        }
-      });
-
-      nominators = {
-        activeEra: parseInt(activeEra),
-        nominators
-      }
-
-      await this.cachedata.update('nominators', nominators);
-
-      return nominators;
-    } else {
-      // this.cachedata.update('nominators', []);
+    if (res.status !== 200 || res.data.length === 0) {
       console.log(`no data`)
       return {
         errorCode: 2000,
         errorMsg: 'Failed to fetch 1kv nominators.' 
       };
     }
+
+    let nominators = res.data;
+    let validCandidates = await this.valid();
+
+    nominators = nominators.map((nominator, index, array) => {
+      const current = nominator.current.map((stash, index, array) => {
+        let candidate = validCandidates.valid.find((c, index, array) => {
+          return stash === c.stash;
+        });
+        if (candidate === undefined) {
+          return {
+            stash,
+            name: null,
+            elected: null
+          }
+        } else {
+          return {
+            stash: stash,
+            name: candidate.name,
+            elected: candidate.elected
+          }
+        }
+      });
+      return {
+        current,
+        lastNomination: moment(nominator.lastNomination).format(),
+        createdAt: moment(nominator.createdAt).format(),
+        _id: nominator._id,
+        address: nominator.address,
+        __v: nominator.__v,
+      }
+    });
+
+    nominators = {
+      activeEra: parseInt(activeEra),
+      nominators
+    }
+
+    await this.cachedata.update('nominators', nominators);
+
+    return nominators;
   }
 
   statistic = async (network, stash) => {
