@@ -135,7 +135,11 @@ module.exports = class DatabaseHandler {
       validator[0].statusChange.commission = data.commissionChanged;
       await validator[0].save();
       if(eraData.info !== undefined && eraData.info?.length > 0) { // the data of this era exist, dont add a new one
-        // console.log(`duplicated data of era ${data.era}`);
+        this.validators.findOneAndUpdate({
+          id: id, 'info': {$elemMatch: {era: data.era}},
+        }, {
+          'info.$': data,
+        }, ).exec();
         return true;
       }
       await validator[0].info.push(data);
