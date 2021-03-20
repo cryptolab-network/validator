@@ -334,19 +334,31 @@ module.exports = class OnekvWrapper {
     let valid;
     let i = 0;
     if (option.target === 'all') {
-      valid = validators.map((validator) => {
-        const nominators = nominations.filter((nomination) => {
-          return nomination.targets.some((target) => {
-            return target === validator.accountId.toString();
-          })
-        })
-        validator.totalNominators = nominators.length;
-        validator.nominators = nominators.map((element) => {
-          return {
-            address: element.accountId,
-            balance: element.balance,
+
+      let nominators = [];
+      for(let i=0; i < nominations.length; i++) {
+        const nominator = nominations[i];
+        const targets = nominator.targets;
+        for(let j=0; j < targets.length; j++) {
+          const target = targets[j];
+          if (nominators[target] === undefined) {
+            nominators[target] = [];
           }
-        })
+          nominators[target].push({
+            address: nominator.accountId,
+            balance: nominator.balance
+          });
+        }
+      }
+
+      valid = validators.map((validator) => {
+        if (nominators[validator.accountId.toString()] === undefined) {
+          validator.totalNominators = 0;
+          validator.nominators = [];
+        } else {
+          validator.totalNominators = nominators[validator.accountId.toString()].length;
+          validator.nominators = nominators[validator.accountId.toString()];
+        }
         if (validator.active){
           electedCount++;
         }
