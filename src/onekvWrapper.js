@@ -24,7 +24,7 @@ module.exports = class OnekvWrapper {
 
     const validCache = await this.cachedata.fetch(activeEra, 'valid');
     if (validCache !== undefined) {
-      if (validCache !== null && validCache !== '') {
+      if (validCache !== null && validCache !== '' && validCache.validatorCount !== 0) {
         return validCache;
       }
     }
@@ -70,7 +70,7 @@ module.exports = class OnekvWrapper {
     const [activeEra, err] = await this.chaindata.getActiveEraIndex();
     // check cache data to retive data
     const data = await this.cachedata.fetch(activeEra, 'onekvNominators');
-    if (data !== undefined) {
+    if (data !== undefined && data !== null && data.nominators.length !== 0) {
       return data;
     }
 
@@ -257,7 +257,7 @@ module.exports = class OnekvWrapper {
     }
 
     const validatorsCache = await this.cachedata.fetch(activeEra, 'validators');
-    if (validatorsCache !== null) {
+    if (validatorsCache !== undefined && validatorsCache !== null) {
       return validatorsCache;
     }
 
@@ -292,17 +292,13 @@ module.exports = class OnekvWrapper {
     if(!option.useChainData) {
       if (option.target === 'all') {
         const validDetailAllCache = await this.cachedata.fetch(activeEra, 'validDetailAll');
-        if(validDetailAllCache !== undefined) {
-          if (validDetailAllCache !== null) {
-            return validDetailAllCache;
-          }
+        if(validDetailAllCache !== undefined && validDetailAllCache !== null && validDetailAllCache.validatorCount !== 0) {
+          return validDetailAllCache;
         }
       } else {
         const validDetailCache = await this.cachedata.fetch(activeEra, 'validDetail');
-        if(validDetailCache !== undefined) {
-          if (validDetailCache !== null) {
-            return validDetailCache;
-          }
+        if(validDetailCache !== undefined && validDetailCache !== null && validDetailCache.validatorCount !== 0) {
+          return validDetailCache;
         }
       }
     }
