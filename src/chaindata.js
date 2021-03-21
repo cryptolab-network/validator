@@ -236,6 +236,8 @@ module.exports = class ChainData {
     validators = await Promise.all(
       validators.map((validator) =>
         api.derive.accounts.info(validator.accountId).then(({ identity }) => {
+          identity.judgements = []; // remove it to avoid cache error
+          validator.rewardDestination = {}; // remove it to avoid cache error
           return {
             ...validator,
             identity,
@@ -247,6 +249,8 @@ module.exports = class ChainData {
     intentions = await Promise.all(
       JSON.parse(JSON.stringify(waitingInfo.info)).map((intention) =>
         api.derive.accounts.info(intention.accountId).then(({ identity }) => {
+          identity.judgements = []; // remove it to avoid cache error
+          intention.rewardDestination = {}; // remove it to avoid cache error
           return {
             ...intention,
             identity,
