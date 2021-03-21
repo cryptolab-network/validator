@@ -157,6 +157,9 @@ app.use(koaCash({
     });
 
     router.get(API.Nominators, async (ctx) => {
+      if (await ctx.cashed(300000)) {
+        return;
+      }
       try {
         const nominators = await onekvWrapper.nominators();
         ctx.compress = true;
@@ -307,6 +310,14 @@ app.use(koaCash({
     })
 
     router.get(API.ValidDetail, async (ctx) => {
+      try {
+        if (await ctx.cashed(300000)) {
+          return;
+        }
+      } catch(err) {
+        console.log('get data from koa cash failed');
+        console.log(err);
+      }
       try {
         const { option } = ctx.request.query;
         const valid = await onekvWrapper.getValidDetail({target: option});
