@@ -157,7 +157,10 @@ module.exports = class ChainData {
         api.derive.balances.all(nominator[0].toHuman()[0]).then((balance) => {
           return {
             ...nominator,
-            balance
+            balance: {
+              lockedBalance: balance.lockedBalance,
+              freeBalance: balance.freeBalance
+            }
           }
         })
       )
@@ -264,7 +267,10 @@ module.exports = class ChainData {
         api.derive.balances.all(nominator[0].toHuman()[0]).then((balance) => {
           return {
             ...nominator,
-            balance
+            balance: {
+              lockedBalance: balance.lockedBalance,
+              freeBalance: balance.freeBalance
+            }
           }
         })
       )
