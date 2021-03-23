@@ -56,6 +56,7 @@ module.exports = class Scheduler {
     const eraReward = await this.chainData.getEraTotalReward(info.activeEra - 1);
     const validatorCount = await this.chainData.getCurrentValidatorCount();
     console.log('Start to store validator status to db');
+    const startTime = Date.now();
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
       const activeKSM = new BigNumber(v.exposure.total).toNumber()/KUSAMA_DECIMAL;
@@ -81,7 +82,7 @@ module.exports = class Scheduler {
       const commissionPct =  v.validatorPrefs?.commission / 10000000;
       const data = await this.database.getValidatorStatusOfEra(v.stashId.toString(), info.activeEra - 1);
       const lastValidatorData = data.validator;
-      if(lastValidatorData.info !== undefined) {
+      if(lastValidatorData !== null && lastValidatorData.info !== undefined) {
         const info = lastValidatorData.info[0];
         if(info !== undefined) {
           if(info.commission != commissionPct) {
@@ -112,5 +113,6 @@ module.exports = class Scheduler {
       // }
     }
     console.log('done.');
+    console.log('Executed query in', Date.now() - startTime, 'ms');
   }
 }

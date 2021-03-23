@@ -8,8 +8,9 @@ module.exports = class DatabaseHandler {
 
   connect(name, pass, ip, port, dbName) {
     const self = this;
-    this.validators = mongoose.model('Validators', this.validatorSchema_);
-    mongoose.connect(`mongodb://${name}:${pass}@${ip}/${dbName}`, {
+    this.Validator = mongoose.model('Validator', this.validatorSchema_);
+    this.Nomination = mongoose.model('Nomination', this.nominationSchema_);
+    mongoose.connect(`mongodb://${ip}:${port}/${dbName}`, {
       useNewUrlParser: true, 
       useUnifiedTopology: true,
       poolSize: 10
@@ -27,64 +28,69 @@ module.exports = class DatabaseHandler {
       identity: {
         display: String
       },
-      info: [{
-        era: Number,
-        exposure:{
-          total: String,
-          own: Number,
-          others: [
-            {
-              who: String,
-              value: Number,
-            }
-          ]
-        },
-        nominators: [Object],
-        commission: Number,
-        apy: Number,
-      }],
       statusChange: {
         commission: Number, // 0: no change, 1: up, 2: down
-      }
-    }, {toObject: {
-      transform: function(doc, ret) {
-        delete ret._id;
-        delete ret.__v;
-      }
-    }})
+      },
+    }, { collection: 'validator' });
+
+    this.nominationSchema_ = new Schema({
+      era: Number,
+      exposure:{
+        total: String,
+        own: Number,
+        others: [
+          {
+            who: String,
+            value: Number,
+          }
+        ]
+      },
+      nominators: [Object],
+      commission: Number,
+      apy: Number,
+      validator: String
+    }, { collection: 'nomination' });
   }
 
   async getValidatorStatusOfEra(id, era) {
-    const startTime = Date.now();
-    let validator = await this.validators.aggregate([
-        {$match: {
-          id: id,
-          'info.era': era
-        }},
-        {$project: {
-          info: {
-            $filter: {
-              input: '$info',
-              as: 'info',
-              cond: { $eq: ['$$info.era', era]}
-            }
-          }
-        }}
-    ]).exec();
-    if(validator.length > 0) {
-      validator = validator[0];
+    let validator = await this.Validator.findOne({
+      id: id
+    }).exec();
+
+    if (validator === null) {
+      return {
+        validator
+      }
     }
-    // console.log('Executed query getValidatorStatusOfEra in', Date.now() - startTime, 'ms');
+    
+    const nomination = await this.Nomination.findOne({
+      era: era,
+      validator: id
+    }).exec();
+
+    if (nomination !== null) {
+      validator.info = [nomination];
+    }
+
     return {
-      validator: validator,
-    };
+      validator
+    }
   }
 
   async getValidatorStatus(id) {
-    const startTime = Date.now();
-    const validator = await this.validators.find({ id: id }).exec();
+    const validator = await this.Validator.aggregate([
+      {$match: {
+        'id': id
+      }},
+      {$lookup: {
+        from: 'nomination',
+        localField: 'id',
+        foreignField: 'validator',
+        as: 'info'
+      }}
+    ]).exec();
+
     const result = this.__validatorSerialize(validator);
-    // console.log('Executed query in', Date.now() - startTime, 'ms');
     return {
       validator: validator,
       objectData: result
@@ -93,22 +99,37 @@ module.exports = class DatabaseHandler {
 
   async getValidators(era, size, page) {
     const startTime = Date.now();
-    const validatorCollection = await this.validators.aggregate([
-      {$unwind: {path: '$info', preserveNullAndEmptyArrays: true}},
-      {$redact: 
-        {$cond: {
-          if: {$eq:['$info.era', era]},
-          then: '$$KEEP',
-          else: '$$PRUNE',
-        }}
-      },
+    const nominations = await this.Nomination.aggregate([
+      {$match: {
+        era: era
+      }},
+      {$lookup: {
+        from: 'validator',
+        localField: 'validator',
+        foreignField: 'id',
+        as: 'data'
+      }},
       {$skip: page * size},
       {$limit: size}
-    ]);
+    ]).exec();
+
+    const validators = nominations.map((nomination) => {
+      return {
+        id: nomination.data[0].id,
+        identity: nomination.data[0].identity,
+        statusChange: nomination.data[0].statusChange,
+        info: {
+          nominators: nomination.nominators,
+          era: nomination.era,
+          exposure: nomination.exposure,
+          commission: nomination.commission,
+          apy: nomination.apy
+        }
+      }
+    });
     console.log('Executed query in', Date.now() - startTime, 'ms');
-    console.log(`validator size = ${validatorCollection.length}`);
     return {
-      validator: validatorCollection
+      validator: validators
     }
   }
 
@@ -119,31 +140,48 @@ module.exports = class DatabaseHandler {
     }
     const { validator, objectData } = await this.getValidatorStatus(id);
     if(validator === undefined || validator.length === 0) {
-      await this.validators.create({
+      await this.Validator.create({
         id: id,
         identity: data.identity,
-        info: [
-          data
-        ],
         statusChange: {
           commission: 0,
         }
-      })
+      });
+      await this.Nomination.create({
+        era: data.era,
+        exposure: data.exposure,
+        nominators: data.nominators,
+        commission: data.commission,
+        apy: data.apy,
+        validator: id
+      });
     } else {
-      const eraData = await this.validators.findOne({id: id}, {'info': {$elemMatch: {era: data.era}}}, {}).exec();
-      validator[0].identity = data.identity;
-      validator[0].statusChange.commission = data.commissionChanged;
-      await validator[0].save();
-      if(eraData.info !== undefined && eraData.info?.length > 0) { // the data of this era exist, dont add a new one
-        this.validators.findOneAndUpdate({
-          id: id, 'info': {$elemMatch: {era: data.era}},
+      await this.Validator.findOneAndUpdate({
+        id: id
+      }, {
+        identity: data.identity,
+        'statusChange.commission': data.commissionChanged
+      }).exec();
+      const nomination = await this.Nomination.findOne({era: data.era, validator: id}).exec();
+      if(nomination !== null) { // the data of this era exist, dont add a new one
+        await this.Nomination.findOneAndUpdate({
+          era: data.era, validator: id,
         }, {
-          'info.$': data,
+          exposure: data.exposure,
+          nominators: data.nominators,
+          commission: data.commission,
+          apy: data.apy,
         }, ).exec();
         return true;
       }
-      await validator[0].info.push(data);
-      await validator[0].save();
+      await this.Nomination.create({
+        era: data.era,
+        exposure: data.exposure,
+        nominators: data.nominators,
+        commission: data.commission,
+        apy: data.apy,
+        validator: id
+      });
     }
     return true;
   }
@@ -182,16 +220,26 @@ module.exports = class DatabaseHandler {
 
   __validatorSerialize(validator) {
     const result = [];
-    validator.forEach((v)=>{
-      const obj = v.toObject();
-      obj.info.forEach(element => {
-        delete element._id;
-        element.exposure.others.forEach((e)=>{
-          delete e._id;
-        });
-      });
-      result.push(obj);
-    });
+
+    for (let i=0; i<validator.length; i++) {
+      let info = [];
+      for (let j=0; j<validator[i].info.length; j++) {
+        info.push({
+          nominators: validator[i].info[j].nominators,
+          era: validator[i].info[j].era,
+          exposure: validator[i].info[j].exposure,
+          commission: validator[i].info[j].commission,
+          apy: validator[i].info[j].apy
+        })
+        
+      }
+      result.push({
+        id: validator[i].id,
+        identity: validator[i].identity,
+        statusChange: validator[i].statusChange,
+        info: info
+      })
+    }
     return result;
   }
 }

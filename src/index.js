@@ -228,17 +228,24 @@ app.use(koaCash({
         ctx.compress = true;
         ctx.body = validator;
       } catch (err) {
-        if (err.response.status === 503) {
+        if (err.response !== undefined && err.response.status === 503) {
+          ctx.compress = true;
           ctx.body = {
             errorCode: 503, // server error
             errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
           }
-        } else {
+        } else if (err.response !== undefined) {
           ctx.compress = true;
           ctx.body = {
             errorCode: 9999, // unknown error
             errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+          } 
+        } else {
+          ctx.compress = true;
+          ctx.body - {
+            errorCode: 99999999
           }
+          console.log(err);
         }
       }
     });
