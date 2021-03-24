@@ -374,6 +374,8 @@ module.exports = class OnekvWrapper {
       valid = res.data;
       let electedCount = 0;
       valid = await Promise.all(valid.map(async (candidate) => {
+        // to fix front end temporarily, because 1kv remove this property of valid endpoint
+        candidate.invalidityReasons = '';
         const stakingInfo = validators.find((validator) => {
           return validator.accountId.toString() === candidate.stash;
         });
