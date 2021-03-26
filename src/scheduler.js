@@ -26,6 +26,7 @@ module.exports = class Scheduler {
         await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
         console.log(`http://localhost:${keys.PORT}/api/validDetail`);
         await this.__collectValidatorStatus();
+        await this.__collect1kvStatus();
       } catch (err){
         console.log(err);
         console.log('schedule retrieving data error');
@@ -38,6 +39,11 @@ module.exports = class Scheduler {
   start() {
     console.log('start cronjob');
     this.job_.start();
+  }
+
+  async __collect1kvStatus() {
+    console.log('Collecting 1kv validator status');
+    await this.oneKvWrapper.onekvNominators({useChainData: true});
   }
 
   async __collectValidatorStatus() {

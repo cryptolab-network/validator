@@ -65,13 +65,18 @@ module.exports = class OnekvWrapper {
     return valid;
   }
 
-  onekvNominators = async () => {
+  onekvNominators = async (options) => {
+    if(options === undefined) {
+      options = {useChainData: false};
+    }
     // retrive active era
     const [activeEra, err] = await this.chaindata.getActiveEraIndex();
-    // check cache data to retive data
-    const data = await this.cachedata.fetch(activeEra, 'onekvNominators');
-    if (data !== undefined && data !== null && data.nominators.length !== 0) {
-      return data;
+    if(options.useChainData === false) {
+      // check cache data to retive data
+      const data = await this.cachedata.fetch(activeEra, 'onekvNominators');
+      if (data !== undefined && data !== null && data.nominators.length !== 0) {
+        return data;
+      }
     }
 
     let res = await axios.get(`${NODE_RPC_URL}/nominators`);
