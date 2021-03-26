@@ -141,17 +141,25 @@ app.use(koaCash({
         ctx.compress = true;
         ctx.body = nominators;
       } catch (err) {
-        if (err.response.status === 503) {
-          ctx.body = {
-            errorCode: 503, // server error
-            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+        if(err.response !== undefined) {
+          if (err.response.status === 503) {
+            ctx.body = {
+              errorCode: 503, // server error
+              errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+            }
+          } else {
+            ctx.compress = true;
+            ctx.body = {
+              errorCode: 9999, // unknown error
+              errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
+            }
           }
         } else {
           ctx.compress = true;
-          ctx.body = {
-            errorCode: 9999, // unknown error
-            errorMsg: `${err.response.status}: Failed to fetch ${err.response.config.url}`,
-          }
+            ctx.body = {
+              errorCode: 9999, // unknown error
+              errorMsg: `${err}: Failed to fetch ${err.response.config.url}`,
+            }
         }
       }
     });
