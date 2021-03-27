@@ -5,8 +5,8 @@ const moment = require('moment');
 const CacheData = require('./cachedata');
 const BigNumber = require('bignumber.js');
 
-const KUSAMA_DECIMAL = 1000000000000;
-module.exports = class Scheduler {
+const POLKADOT_DECIMAL = 10000000000;
+module.exports = class DotScheduler {
   constructor(oneKvWrapper, chainData, database, cacheData) {
     this.oneKvWrapper = oneKvWrapper;
     this.database = database;
@@ -16,7 +16,6 @@ module.exports = class Scheduler {
   }
 
   start() {
-    console.log('start cronjob');
     // request api every 1 hour to trigger the data cache
     this.job_ = new CronJob('30 */1 * * *', async () => {
       if(this.isCaching) {
@@ -25,12 +24,9 @@ module.exports = class Scheduler {
       this.isCaching = true;
       try {
         console.log('retrieving validator detail @ ' + moment());
-        await axios.get(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
-        console.log(`http://localhost:${keys.PORT}/api/validDetail?option=all`);
-        await axios.get(`http://localhost:${keys.PORT}/api/validDetail`);
-        console.log(`http://localhost:${keys.PORT}/api/validDetail`);
+        await axios.get(`http://localhost:${keys.PORT}/api/dot/validDetail?option=all`);
+        console.log(`http://localhost:${keys.PORT}/api/dot/validDetail?option=all`);
         await this.__collectValidatorStatus();
-        await this.__collect1kvStatus();
       } catch (err){
         console.log(err);
         console.log('schedule retrieving data error');
@@ -38,12 +34,8 @@ module.exports = class Scheduler {
       this.isCaching = false;
     }, null, false, 'America/Los_Angeles', null, true);
     
+    console.log('start cronjob');
     this.job_.start();
-  }
-
-  async __collect1kvStatus() {
-    console.log('Collecting 1kv validator status');
-    await this.oneKvWrapper.onekvNominators({useChainData: true});
   }
 
   async __collectValidatorStatus() {
@@ -65,13 +57,11 @@ module.exports = class Scheduler {
     const startTime = Date.now();
     for(let i = 0; i < validators.length; i++) {
       const v = validators[i];
-      const activeKSM = new BigNumber(v.exposure.total).toNumber()/KUSAMA_DECIMAL;
+      const activeKSM = new BigNumber(v.exposure.total).toNumber()/POLKADOT_DECIMAL;
       const commission = v.validatorPrefs.commission / 10000000;
-      // console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
-      const apy = activeKSM === 0 ? 0 : (((eraReward / KUSAMA_DECIMAL) / validatorCount) * (1 - commission/100) * 365) / activeKSM * 4;
+      const apy = activeKSM === 0 ? 0 : (((eraReward / POLKADOT_DECIMAL) / validatorCount) * (1 - commission/100) * 365) / activeKSM;
       v.apy = apy;
       if (isNaN(apy)) {
-        // console.log(`(((${eraReward} / ${KUSAMA_DECIMAL}) / ${validatorCount}) * (1 - ${commission}) * 365) / ${activeKSM} * 4`);
         v.apy = 0;
       }
       let display = v.stashId;

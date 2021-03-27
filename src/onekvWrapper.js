@@ -9,10 +9,10 @@ const POLKADOT_DECIMAL = 10000000000;
 const NODE_RPC_URL = keys.API_1KV_KUSAMA;
 
 module.exports = class OnekvWrapper {
-  constructor(handler) {
+  constructor(handler, cachedata) {
     this.handler = handler
     this.chaindata = new ChainData(handler);
-    this.cachedata = new CacheData();
+    this.cachedata = cachedata;
   }
 
   valid = async () => {
@@ -128,11 +128,6 @@ module.exports = class OnekvWrapper {
 
     await this.cachedata.update('onekvNominators', nominators);
 
-    return nominators;
-  }
-
-  nominators = async () => {
-    const nominators = await this.chaindata.getNominators();
     return nominators;
   }
 
