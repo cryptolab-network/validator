@@ -3,8 +3,12 @@ const path = require('path');
 
 module.exports = class CacheData {
   _filepath;
-  constructor() {
-    this._filepath = path.join(__dirname, 'data/data.json');
+  constructor(filePath) {
+    if(filePath === undefined) {
+      this._filepath = path.join(__dirname, 'data/data.json');
+    } else {
+      this._filepath = path.join(__dirname, filePath);
+    }
   }
 
   fetch = async (activeEra, endpoint) => {

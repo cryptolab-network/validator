@@ -8,14 +8,14 @@ module.exports = class DatabaseHandler {
 
   connect(name, pass, ip, port, dbName) {
     const self = this;
-    this.Validator = mongoose.model('Validator', this.validatorSchema_);
-    this.Nomination = mongoose.model('Nomination', this.nominationSchema_);
-    mongoose.connect(`mongodb://${name}:${pass}@${ip}:${port}/${dbName}`, {
+    const db = mongoose.createConnection(`mongodb://${name}:${pass}@${ip}:${port}/${dbName}`, {
       useNewUrlParser: true, 
       useUnifiedTopology: true,
       poolSize: 10
     });
-    const db = mongoose.connection;
+    this.Validator = db.model('Validator_' + dbName, this.validatorSchema_);
+    this.Nomination = db.model('Nomination_' + dbName, this.nominationSchema_);
+    
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', async function() {
       console.log('DB connected');
