@@ -43,7 +43,7 @@ class Kusama {
             return;
         }
         try {
-            const nominators = await this.chaindata.getNominators();
+            const nominators = await this.chainData.getNominators();
             ctx.compress = true;
             ctx.body = nominators;
         } catch (err) {
