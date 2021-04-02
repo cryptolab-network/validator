@@ -53,6 +53,13 @@ app.use(compress({
   br: false,
 }));
 
+if(process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+  app.use(async (ctx, next)=>{
+    ctx.set('Access-Control-Allow-Origin', '*');
+    ctx.set('Access-Control-Allow-Methods', 'GET, OPTION, PUT');
+    await next();
+  });
+}
 
 app.use(koaCash({
   compression: true,

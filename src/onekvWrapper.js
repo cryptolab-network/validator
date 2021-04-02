@@ -359,7 +359,7 @@ module.exports = class OnekvWrapper {
           electedCount++;
         }
         (i%50 === 0) ? console.log(`${i++}/${validators.length}`) : i++;
-        
+        validator.exposure = JSON.parse(JSON.stringify(validator.exposure));
         return validator;
       });
       valid = {
