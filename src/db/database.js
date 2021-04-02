@@ -8,7 +8,11 @@ module.exports = class DatabaseHandler {
 
   connect(name, pass, ip, port, dbName) {
     const self = this;
-    const db = mongoose.createConnection(`mongodb://${name}:${pass}@${ip}:${port}/${dbName}`, {
+    let url = `mongodb://${ip}:${port}/${dbName}`;
+    if(process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test') {
+      url = `${name}:${pass}@` + url;
+    }
+    const db = mongoose.createConnection(url, {
       useNewUrlParser: true, 
       useUnifiedTopology: true,
       poolSize: 10
