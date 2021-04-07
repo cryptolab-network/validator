@@ -23,6 +23,7 @@ module.exports = class DotScheduler {
       }
       this.isCaching = true;
       try {
+        await this.__updateActiveEra();
         console.log('retrieving validator detail @ ' + moment());
         await axios.get(`http://localhost:${keys.PORT}/api/dot/validDetail?option=all`);
         console.log(`http://localhost:${keys.PORT}/api/dot/validDetail?option=all`);
@@ -32,15 +33,20 @@ module.exports = class DotScheduler {
         console.log('schedule retrieving data error');
       }
       this.isCaching = false;
-    }, null, false, 'America/Los_Angeles', null, true);
+    }, null, true, 'America/Los_Angeles', null, true);
     
     console.log('start cronjob');
     this.job_.start();
   }
 
+  async __updateActiveEra() {
+    const [era, err] = await this.chainData.getActiveEraIndex();
+    await this.database.saveActiveEra(era);
+  }
+
   async __collectValidatorStatus() {
     console.log('Collecting validator status');
-    const info = await this.oneKvWrapper.getValidDetail({target: 'all', useChainData: false});
+    const info = await this.oneKvWrapper.getValidDetail({target: 'all', useChainData: true});
     if(info === undefined) {
       console.error('info is undefined');
       return;

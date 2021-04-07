@@ -17,6 +17,7 @@ const API = {
   ValidCandidates: API_PREFIX + '/valid',
   OnekvNominators: API_PREFIX + ONEKV_PREFIX + '/nominators',
   Nominators: API_PREFIX + '/nominators',
+  Nominator: API_PREFIX + 'nominator/:stash',
   Statistic: API_PREFIX + '/statistic/:stash',
   FalseNominations: API_PREFIX + '/falseNominations',
   Validators: API_PREFIX + '/validators',
@@ -26,7 +27,7 @@ const API = {
   polkadot: API_PREFIX + '/polkadot/:stash',
   kusama: API_PREFIX + '/kusama/:stash',
   validatorTrend: API_PREFIX + '/validator/:stash/trend',
-
+  validatorDetail: API_PREFIX + '/validator/:stash',
   AllValidators: API_PREFIX + '/allValidators',
 }
 
@@ -220,6 +221,18 @@ class Kusama {
         const { validator, objectData } = await db.getValidatorStatus(stash);
         ctx.compress = true;
         ctx.body = objectData;
+        });
+
+        router.get(API.validatorDetail, async (ctx) => {
+            const { stash } = ctx.params;
+            const [activeEra, error] = await this.chaindata.getActiveEraIndex();
+            if (error !== null) {
+                console.log(error);
+                return [];
+            }
+            const data = await db.getValidatorStatusOfEra(stash, activeEra);
+            ctx.compress = true;
+            ctx.body = data;
         });
 
         router.get(API.onekvlist, async (ctx) => {
