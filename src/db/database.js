@@ -19,6 +19,7 @@ module.exports = class DatabaseHandler {
     });
     this.Validator = db.model('Validator_' + dbName, this.validatorSchema_);
     this.Nomination = db.model('Nomination_' + dbName, this.nominationSchema_);
+    this.ChainInfo = db.model('ChainInfo_' + dbName, this.chainInfoSchema_);
     
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', async function() {
@@ -27,6 +28,9 @@ module.exports = class DatabaseHandler {
   }
 
   __initSchema() {
+    this.chainInfoSchema_ = new Schema({
+      activeEra: Number,
+    }, { collection: 'chainInfo' });
     this.validatorSchema_ = new Schema({
       id:  String,
       identity: {
@@ -188,6 +192,14 @@ module.exports = class DatabaseHandler {
       });
     }
     return true;
+  }
+
+  async saveActiveEra(era) {
+    console.log('save active era');
+    const result = await this.ChainInfo.updateOne({}, {$set: {activeEra: era}}, {upsert: true}).exec().catch((err)=>{
+      console.error(err);
+    });
+    console.log(result);
   }
 
   __validateNominationInfo(id, data) {
