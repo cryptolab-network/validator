@@ -16,8 +16,7 @@ module.exports = class DotScheduler {
   }
 
   start() {
-    // request api every 1 hour to trigger the data cache
-    this.job_ = new CronJob('30 */1 * * *', async () => {
+    this.job_ = new CronJob('*/10 * * * *', async () => {
       if(this.isCaching) {
         return;
       }
@@ -28,6 +27,7 @@ module.exports = class DotScheduler {
         await axios.get(`http://localhost:${keys.PORT}/api/dot/validDetail?option=all`);
         console.log(`http://localhost:${keys.PORT}/api/dot/validDetail?option=all`);
         await this.__collectValidatorStatus();
+        await this.__collectNominatorStatus();
       } catch (err){
         console.log(err);
         console.log('schedule retrieving data error');
@@ -115,6 +115,15 @@ module.exports = class DotScheduler {
       // }
     }
     console.log('done.');
+    console.log('Executed query in', Date.now() - startTime, 'ms');
+  }
+
+  async __collectNominatorStatus() {
+    const startTime = Date.now();
+    console.log('collecting nominator data from chain');
+    const nominators = await this.chainData.getNominators();
+    this.cacheData.update('nominators', nominators);
+    console.log('collecting nominator data from chain ends');
     console.log('Executed query in', Date.now() - startTime, 'ms');
   }
 }
