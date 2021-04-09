@@ -18,7 +18,7 @@ module.exports = class Scheduler {
   start() {
     console.log('start cronjob');
     // request api every 1 hour to trigger the data cache
-    this.job_ = new CronJob('30 */1 * * *', async () => {
+    this.job_ = new CronJob('*/10 * * * *', async () => {
       if(this.isCaching) {
         return;
       }
