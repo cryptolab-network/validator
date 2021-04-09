@@ -32,6 +32,7 @@ module.exports = class Scheduler {
         console.log(`http://localhost:${keys.PORT}/api/validDetail`);
         await this.__collectValidatorStatus();
         await this.__collect1kvStatus();
+        await this.__collectNominatorStatus();
       } catch (err){
         console.log(err);
         console.log('schedule retrieving data error');
@@ -125,6 +126,15 @@ module.exports = class Scheduler {
       // }
     }
     console.log('done.');
+    console.log('Executed query in', Date.now() - startTime, 'ms');
+  }
+
+  async __collectNominatorStatus() {
+    const startTime = Date.now();
+    console.log('collecting nominator data from chain');
+    const nominators = await this.chainData.getNominators();
+    this.cacheData.update('nominators', nominators);
+    console.log('collecting nominator data from chain ends');
     console.log('Executed query in', Date.now() - startTime, 'ms');
   }
 }
