@@ -16,7 +16,7 @@ module.exports = class DotScheduler {
   }
 
   start() {
-    this.job_ = new CronJob('*/10 * * * *', async () => {
+    this.job_ = new CronJob('*/15 * * * *', async () => {
       if(this.isCaching) {
         return;
       }
@@ -112,7 +112,7 @@ module.exports = class DotScheduler {
       };
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), nomination);
       if (result === false) {
-        console.log(JSON.stringify(nomination, undefined, 1));
+        console.log(`dot, era: ${info.activeEra}, stashId: ${v.stashId.toString()}`);
       }
       // if (result) {
       //   console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);

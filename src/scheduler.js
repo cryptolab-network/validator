@@ -18,7 +18,7 @@ module.exports = class Scheduler {
   start() {
     console.log('start cronjob');
     // request api every 1 hour to trigger the data cache
-    this.job_ = new CronJob('*/10 * * * *', async () => {
+    this.job_ = new CronJob('*/15 * * * *', async () => {
       if(this.isCaching) {
         return;
       }
@@ -123,7 +123,7 @@ module.exports = class Scheduler {
       }
       const result = await this.database.saveValidatorNominationData(v.stashId.toString(), nomination);
       if (result === false) {
-        console.log(JSON.stringify(nomination, undefined, 1));
+        console.log(`era: ${info.activeEra}, stashId: ${v.stashId.toString()}`);
       }
       // if (result) {
       //   console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
