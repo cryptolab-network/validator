@@ -112,7 +112,7 @@ module.exports = class Scheduler {
           }
         }
       }
-      const nominatoin = {
+      const nomination = {
         era: info.activeEra,
         exposure: v.exposure,
         nominators: v.nominators,
