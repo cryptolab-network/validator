@@ -21,6 +21,7 @@ module.exports = class DatabaseHandler {
     this.Validator = db.model('Validator_' + dbName, this.validatorSchema_);
     this.Nomination = db.model('Nomination_' + dbName, this.nominationSchema_);
     this.ChainInfo = db.model('ChainInfo_' + dbName, this.chainInfoSchema_);
+    // this.Nominator = db.model('Nominator_' + dbName, this.nominatorSchema_);
     
     db.on('error', console.error.bind(console, 'connection error:'));
     db.once('open', async function() {
@@ -59,6 +60,18 @@ module.exports = class DatabaseHandler {
       apy: Number,
       validator: String
     }, { collection: 'nomination' });
+
+    // this.nominatorSchema_ = new Schema({
+    //   era: Number,
+    //   validator: String,
+    //   nominator: {
+    //     address: String,
+    //     balance: {
+    //       lockedBalance: String,
+    //       freeBalance: String
+    //     }
+    //   }
+    // }, { collection: 'nominator' });
   }
 
   async getValidatorStatusOfEra(id, era) {
@@ -143,56 +156,61 @@ module.exports = class DatabaseHandler {
   }
 
   async saveValidatorNominationData(id, data) {
-    const isDataValid = this.__validateNominationInfo(id, data);
-    if(!isDataValid) {
-      return false;
-    }
-    const { validator, objectData } = await this.getValidatorStatus(id);
-    if(validator === undefined || validator.length === 0) {
-      await this.Validator.create({
-        id: id,
-        identity: data.identity,
-        statusChange: {
-          commission: 0,
-        }
-      });
-      await this.Nomination.create({
-        era: data.era,
-        exposure: data.exposure,
-        nominators: data.nominators,
-        commission: data.commission,
-        apy: data.apy,
-        validator: id
-      });
-    } else {
-      await this.Validator.findOneAndUpdate({
-        id: id
-      }, {
-        identity: data.identity,
-        'statusChange.commission': data.commissionChanged
-      }).exec();
-      const nomination = await this.Nomination.findOne({era: data.era, validator: id}).exec();
-      if(nomination !== null) { // the data of this era exist, dont add a new one
-        await this.Nomination.findOneAndUpdate({
-          era: data.era, validator: id,
-        }, {
+    try {
+      const isDataValid = this.__validateNominationInfo(id, data);
+      if(!isDataValid) {
+        return false;
+      }
+      const { validator, objectData } = await this.getValidatorStatus(id);
+      if(validator === undefined || validator.length === 0) {
+        await this.Validator.create({
+          id: id,
+          identity: data.identity,
+          statusChange: {
+            commission: 0,
+          }
+        });
+        await this.Nomination.create({
+          era: data.era,
           exposure: data.exposure,
           nominators: data.nominators,
           commission: data.commission,
           apy: data.apy,
-        }, ).exec();
-        return true;
+          validator: id
+        });
+      } else {
+        await this.Validator.findOneAndUpdate({
+          id: id
+        }, {
+          identity: data.identity,
+          'statusChange.commission': data.commissionChanged
+        }).exec();
+        const nomination = await this.Nomination.findOne({era: data.era, validator: id}).exec();
+        if(nomination !== null) { // the data of this era exist, dont add a new one
+          await this.Nomination.findOneAndUpdate({
+            era: data.era, validator: id,
+          }, {
+            exposure: data.exposure,
+            nominators: data.nominators,
+            commission: data.commission,
+            apy: data.apy,
+          }, ).exec();
+          return true;
+        }
+        await this.Nomination.create({
+          era: data.era,
+          exposure: data.exposure,
+          nominators: data.nominators,
+          commission: data.commission,
+          apy: data.apy,
+          validator: id
+        });
       }
-      await this.Nomination.create({
-        era: data.era,
-        exposure: data.exposure,
-        nominators: data.nominators,
-        commission: data.commission,
-        apy: data.apy,
-        validator: id
-      });
+      return true;
+    } catch (err) {
+      console.log(err);
+      return false;
     }
-    return true;
   }
 
   async saveActiveEra(era) {

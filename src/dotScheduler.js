@@ -30,7 +30,7 @@ module.exports = class DotScheduler {
         await this.__collectNominatorStatus();
       } catch (err){
         console.log(err);
-        console.log('schedule retrieving data error');
+        console.log('dot schedule retrieving data error');
       }
       this.isCaching = false;
     }, null, true, 'America/Los_Angeles', null, true);
@@ -101,7 +101,7 @@ module.exports = class DotScheduler {
           }
         }
       }
-      const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
+      const nomination = {
         era: info.activeEra,
         exposure: v.exposure,
         nominators: v.nominators,
@@ -109,7 +109,11 @@ module.exports = class DotScheduler {
         apy: v.apy,
         identity: {display: display},
         commissionChanged: commissionChanged,
-      });
+      };
+      const result = await this.database.saveValidatorNominationData(v.stashId.toString(), nomination);
+      if (result === false) {
+        console.log(JSON.stringify(nomination, undefined, 1));
+      }
       // if (result) {
       //   console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
       // }

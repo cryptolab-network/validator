@@ -112,7 +112,7 @@ module.exports = class Scheduler {
           }
         }
       }
-      const result = await this.database.saveValidatorNominationData(v.stashId.toString(), {
+      const nominatoin = {
         era: info.activeEra,
         exposure: v.exposure,
         nominators: v.nominators,
@@ -120,7 +120,11 @@ module.exports = class Scheduler {
         apy: v.apy,
         identity: {display: display},
         commissionChanged: commissionChanged,
-      });
+      }
+      const result = await this.database.saveValidatorNominationData(v.stashId.toString(), nomination);
+      if (result === false) {
+        console.log(JSON.stringify(nomination, undefined, 1));
+      }
       // if (result) {
       //   console.log(`${v.stashId.toString()} is stored. (${i+1}/${validators.length})`);
       // }
