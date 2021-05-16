@@ -59,45 +59,51 @@ const NewNomination = mongoose.model('Nomination_new', newNominationSchema_);
     const count = await Nomination.countDocuments();
     console.log(`count = ${count}`);
 
-    for (let x=0; x < count; x++) {
-      const data = await Nomination.find().skip(x).limit(1).exec();
+    const offset = 500
+    for (let x=0; x < count; x += offset) {
+      const data = await Nomination.find().skip(x).limit(offset).exec();
       if (data.length === 0) {
         break;
       }
 
-      const nomination = data[0];
-      // console.log(JSON.stringify(nomination,undefined, 1));
+      let bulkOps = [];
 
-      // console.log(nomination.nominators[0].address);
-      if (nomination.nominators[0] !== undefined && nomination.nominators[0].address === undefined) {
-        console.log(`skip, ${x}/${count}`);
-      } else {
-        const new_nomination = {
-          era: nomination.era,
-          exposure: nomination.exposure,
-          commission: nomination.commission,
-          nominators: [],
-          apy: nomination.apy,
-          validator: nomination.validator
+      for (let i=0; i < data.length; i++) {
+        const nomination = data[i];
+        if (nomination.nominators[0] !== undefined && nomination.nominators[0].address === undefined) {
+          console.log(`skip, ${x}/${count}`);
+        } else {
+          const new_nomination = {
+            era: nomination.era,
+            exposure: nomination.exposure,
+            commission: nomination.commission,
+            nominators: [],
+            apy: nomination.apy,
+            validator: nomination.validator
+          }
+    
+          for (const nominator of nomination.nominators) {
+            new_nomination.nominators.push(nominator.address);
+          }
+          
+          bulkOps.push({
+            'replaceOne': {
+              'filter': {_id: nomination._id},
+              'replacement': new_nomination
+            }
+          })
         }
+      }
+
+      // console.log(JSON.stringify(bulkOps, undefined, 1));
+
+      console.log(`bulkOps count = ${bulkOps.length}`);
+
+      const result = await Nomination.bulkWrite(bulkOps);
+      console.log(result);
   
-        for (const nominator of nomination.nominators) {
-          new_nomination.nominators.push(nominator.address);
-        }
-  
-        // console.log(JSON.stringify(new_nomination, undefined, 1));
-        // console.log(`update, ${x}, ${nomination._id}`);
-        const result = await Nomination.findOneAndReplace(
-          {_id: nomination._id},
-          new_nomination
-        )
-  
-        // const result = await NewNomination.create(new_nomination);
-        // console.log(result);
-  
-        if (x % 10 === 0) {
-          console.log(`${x}/${count}`);
-        }
+      if (x % offset === 0) {
+        console.log(`${x}/${count}`);
       }
 
     }
