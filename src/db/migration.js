@@ -68,38 +68,37 @@ const NewNomination = mongoose.model('Nomination_new', newNominationSchema_);
       const nomination = data[0];
       // console.log(JSON.stringify(nomination,undefined, 1));
 
-      if (nomination.nominators.address === undefined) {
-        console.log(`continue`);
-        continue;
+      // console.log(nomination.nominators[0].address);
+      if (nomination.nominators[0] !== undefined && nomination.nominators[0].address === undefined) {
+        console.log(`skip, ${x}/${count}`);
+      } else {
+        const new_nomination = {
+          era: nomination.era,
+          exposure: nomination.exposure,
+          commission: nomination.commission,
+          nominators: [],
+          apy: nomination.apy,
+          validator: nomination.validator
+        }
+  
+        for (const nominator of nomination.nominators) {
+          new_nomination.nominators.push(nominator.address);
+        }
+  
+        // console.log(JSON.stringify(new_nomination, undefined, 1));
+        // console.log(`update, ${x}, ${nomination._id}`);
+        const result = await Nomination.findOneAndReplace(
+          {_id: nomination._id},
+          new_nomination
+        )
+  
+        // const result = await NewNomination.create(new_nomination);
+        // console.log(result);
+  
+        if (x % 10 === 0) {
+          console.log(`${x}/${count}`);
+        }
       }
-
-      const new_nomination = {
-        era: nomination.era,
-        exposure: nomination.exposure,
-        commission: nomination.commission,
-        nominators: [],
-        apy: nomination.apy,
-        validator: nomination.validator
-      }
-
-      for (const nominator of nomination.nominators) {
-        new_nomination.nominators.push(nominator.address);
-      }
-
-      // console.log(JSON.stringify(new_nomination, undefined, 1));
-
-      const result = await Nomination.findOneAndReplace(
-        {_id: nomination._id},
-        new_nomination
-      )
-
-      // const result = await NewNomination.create(new_nomination);
-      // console.log(result);
-
-      if (x % 10 === 0) {
-        console.log(`${x}/${count}`);
-      }
-      
 
     }
 
