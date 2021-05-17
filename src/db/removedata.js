@@ -92,11 +92,12 @@ const NewNomination = mongoose.model('Nomination_new', newNominationSchema_);
       // const result = await Nomination.bulkWrite(bulkOps);
       // console.log(result);
   
-      // if (x % offset === 0) {
-      //   console.log(`${x}/${count}`);
-      // }
+      if (x % offset === 0) {
+        console.log(`${x}/${count}`);
+      }
 
     }
+    console.log(`total count: ${count}`)
     console.log(`remove count: ${removeCount}`);
 
     db.close();
