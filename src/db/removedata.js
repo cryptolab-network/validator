@@ -76,11 +76,11 @@ const NewNomination = mongoose.model('Nomination_new', newNominationSchema_);
         if (nomination.total === undefined) {
           // console.log(`no total, id = ${nomination._id}`);
 
-          // bulkOps.push({
-          //   'deleteOne': {
-          //     'filter': {_id: nomination._id}
-          //   }
-          // })
+          bulkOps.push({
+            'deleteOne': {
+              'filter': {_id: nomination._id}
+            }
+          })
         }
       }
       removeCount += bulkOps.length;
