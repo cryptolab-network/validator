@@ -80,7 +80,7 @@ const NewNomination = mongoose.model('Nomination_new', newNominationSchema_);
     console.log(`eraSet`);
     console.log(eraSet);
 
-    let vMap = new Map();
+    let duplicateArray = []
 
     let temp = 0;
     for (let era of eraSet) {
@@ -99,16 +99,16 @@ const NewNomination = mongoose.model('Nomination_new', newNominationSchema_);
         }
       }
 
-      vMap.set(era, duplicateSet);
+      duplicateArray.push({
+        era,
+        duplicateSet
+      })
 
       console.log(`era ${era} = ${data.length}`);
+      console.log(`duplicateSet = ${duplicateSet.length}`);
       temp += data.length;
     }
     console.log(`temp = ${temp}`);
-
-    for (let era of eraSet) {
-      console.log(`era ${era}, duplicate count: ${vMap.get(era).legnth}`);
-    }
 
     // let removeCount = 0;
     // for (let x=0; x < count; x += offset) {
