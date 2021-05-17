@@ -92,7 +92,7 @@ const NewNomination = mongoose.model('Nomination_new', newNominationSchema_);
 
       for (let n of data) {
         if (validatorSet.has(n.validator) === true) {
-          console.log(`has`);
+          // console.log(`has`);
           duplicateSet.add(n.validator);
         } else {
           validatorSet.add(n.validator);
