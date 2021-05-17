@@ -60,45 +60,94 @@ const NewNomination = mongoose.model('Nomination_new', newNominationSchema_);
     const count = await Nomination.countDocuments();
     console.log(`count = ${count}`);
 
+    let eraSet = new Set();
     const offset = 5000;
-    let removeCount = 0;
-    for (let x=0; x < count; x += offset) {
+
+    for (let x=0; x < count; x+= offset) {
       const data = await Nomination.find().skip(x).limit(offset).exec();
       if (data.length === 0) {
         break;
       }
-
-      let bulkOps = [];
-
       for (let i=0; i < data.length; i++) {
         const nomination = data[i];
-
-        if (nomination.total === undefined) {
-          // console.log(`no total, id = ${nomination._id}`);
-
-          bulkOps.push({
-            'deleteOne': {
-              'filter': {_id: nomination._id}
-            }
-          })
-        }
+        eraSet.add(nomination.era);
       }
-      removeCount += bulkOps.length;
-      // console.log(JSON.stringify(bulkOps, undefined, 1));
-      
-
-      // console.log(`bulkOps count = ${bulkOps.length}`);
-
-      // const result = await Nomination.bulkWrite(bulkOps);
-      // console.log(result);
-  
       if (x % offset === 0) {
         console.log(`${x}/${count}`);
       }
-
     }
+
+    console.log(`eraSet`);
+    console.log(eraSet);
+
+    let vMap = new Map();
+
+    let temp = 0;
+    for (let era of eraSet) {
+      let validatorSet = new Set();
+      let duplicateSet = new Set();
+      const data = await Nomination.find({
+        era: era
+      }).exec();
+
+      for (let n of data) {
+        if (validatorSet.has(n.validator) === true) {
+          console.log(`has`);
+          duplicateSet.add(n.validator);
+        } else {
+          validatorSet.add(n.validator);
+        }
+      }
+
+      vMap.set(era, duplicateSet);
+
+      console.log(`era ${era} = ${data.length}`);
+      temp += data.length;
+    }
+    console.log(`temp = ${temp}`);
+
+    for (let era of eraSet) {
+      console.log(`era ${era}, duplicate count: ${vMap.get(era).legnth}`);
+    }
+
+    // let removeCount = 0;
+    // for (let x=0; x < count; x += offset) {
+    //   const data = await Nomination.find().skip(x).limit(offset).exec();
+    //   if (data.length === 0) {
+    //     break;
+    //   }
+
+    //   let bulkOps = [];
+
+    //   for (let i=0; i < data.length; i++) {
+    //     const nomination = data[i];
+
+    //     if (nomination.total === undefined) {
+    //       // console.log(`no total, id = ${nomination._id}`);
+
+    //       bulkOps.push({
+    //         'deleteOne': {
+    //           'filter': {_id: nomination._id}
+    //         }
+    //       })
+    //     }
+    //   }
+    //   removeCount += bulkOps.length;
+    //   // console.log(JSON.stringify(bulkOps, undefined, 1));
+      
+
+    //   // console.log(`bulkOps count = ${bulkOps.length}`);
+
+    //   // const result = await Nomination.bulkWrite(bulkOps);
+    //   // console.log(result);
+  
+    //   if (x % offset === 0) {
+    //     console.log(`${x}/${count}`);
+    //   }
+
+    // }
     console.log(`total count: ${count}`)
-    console.log(`remove count: ${removeCount}`);
+    // console.log(`remove count: ${removeCount}`);
 
     db.close();
     console.log(`done`);
